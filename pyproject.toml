@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "book-bot"
+version = "0.1.0"
+description = ""
+authors = ["vitayushchyk <vitay2715@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.11"
+uvicorn = "^0.34.0"
+requests = "^2.32.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
