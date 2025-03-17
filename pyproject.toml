@@ -11,6 +11,14 @@ python = "^3.12"
 fastapi = "^0.115.11"
 uvicorn = "^0.34.0"
 requests = "^2.32.3"
+python-telegram-bot = "^21.11.1"
+beautifulsoup4 = "^4.13.3"
+pydantic-settings = "^2.8.1"
+pydantic = "^2.10.6"
+watchfiles = "^1.0.4"
+python-dotenv = "^1.0.1"
+selenium = "^4.29.0"
+webdriver-manager = "^4.0.2"
 
 
 [build-system]
