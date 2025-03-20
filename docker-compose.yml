@@ -1,0 +1,39 @@
+services:
+  bot:
+    container_name: book-helper-bot
+    build:
+      context: .
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - SEARCH_URL_SENS=${SEARCH_URL_SENS}
+      - SELENIUM_URL=${SELENIUM_URL}
+    command: [ "poetry", "run", "python", "main.py" ]
+    volumes:
+      - .:/app
+    depends_on:
+      selenium-hub:
+        condition: service_healthy
+
+  selenium-hub:
+    image: selenium/hub:4.13.0
+    container_name: selenium-hub
+    platform: linux/amd64
+    ports:
+      - "4444:4444"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "${SELENIUM_STATUS_URL}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  chrome-node:
+    image: selenium/node-chrome:4.13.0
+    container_name: selenium-chrome-node
+    depends_on:
+      - selenium-hub
+    platform: linux/amd64
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    shm_size: "2g"

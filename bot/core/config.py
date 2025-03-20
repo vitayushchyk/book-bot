@@ -1,14 +1,13 @@
 import logging
 
-from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
-
-load_dotenv()
 
 
 class Settings(BaseSettings):
     bot_token: str
     search_url_sens: str
+    selenium_url: str
+    selenium_status_url: str
 
     log_level: str = "INFO"
 
