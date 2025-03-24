@@ -16,6 +16,7 @@ pydantic = "^2.10.6"
 watchfiles = "^1.0.4"
 selenium = ">=4.0.0"
 webdriver-manager = "^4.0.2"
+httpx = "^0.28.1"
 
 
 [tool.poetry.group.dev.dependencies]

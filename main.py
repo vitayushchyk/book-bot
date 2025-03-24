@@ -8,16 +8,16 @@ from telegram.ext import (
     filters,
 )
 
-from bot.book_shop.sens import Sens
+from bot.book_shop.yakaboo import Yakaboo
 from bot.core.config import settings
 from bot.driver.chrome_driver import get_driver
-from bot.handlers.sens_handler import (
+from bot.handlers.start_handler import start
+from bot.handlers.yakaboo_handler import (
     NAME_BOOK,
     book_name_handle,
     cancel_handler,
     start_search_book_handler,
 )
-from bot.handlers.start_handler import start
 
 driver = get_driver()
 logging.basicConfig()
@@ -27,8 +27,7 @@ logging.getLogger().setLevel(settings.get_log_level())
 def get_app():
     logging.info("Initializing the bot...")
     try:
-        sens_url = settings.search_url_sens
-        sens = Sens(driver, sens_url)
+        yakaboo = Yakaboo(driver=driver, yakaboo_url=settings.search_url_yakaboo)
 
         app = ApplicationBuilder().token(settings.bot_token).build()
 
@@ -39,7 +38,7 @@ def get_app():
                 CommandHandler(
                     "findbook",
                     lambda update, context: start_search_book_handler(
-                        sens, update, context
+                        yakaboo, update, context
                     ),
                 ),
             ],
@@ -47,7 +46,9 @@ def get_app():
                 NAME_BOOK: [
                     MessageHandler(
                         filters.TEXT & ~filters.COMMAND,
-                        lambda update, context: book_name_handle(sens, update, context),
+                        lambda update, context: book_name_handle(
+                            yakaboo, update, context
+                        ),
                     )
                 ],
             },
@@ -58,11 +59,10 @@ def get_app():
         app.add_handler(find_book_handler)
 
         logging.info("Bot initialized successfully.")
-        logging.info("Bot is running. Press Ctrl+C to stop.")
         app.run_polling()
 
     except Exception as e:
-        logging.error(f"Error occurred while launching the bot: {e}", exc_info=True)
+        logging.error(f"Error occurred while initializing the bot: {e}", exc_info=True)
 
 
 if __name__ == "__main__":
