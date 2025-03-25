@@ -1,7 +1,3 @@
-from telegram.ext import ContextTypes
-
-name_boor = range(1)
-
 import logging
 
 
@@ -22,13 +18,13 @@ class Sens:
             normalized_query = " ".join(book_name.lower().strip().split())
             matching_books = []
             for book in books_data:
-                title = book.get("title", "Назва відсутня")
+                title = book.get("title", "Title not available")
                 normalized_title = " ".join(title.lower().strip().split())
                 if normalized_query in normalized_title:
                     matching_books.append(
                         {
                             "title": title,
-                            "price": book.get("price", "Ціна відсутня"),
+                            "price": book.get("price", "Price not available"),
                             "link": book.get("url", "#"),
                         }
                     )

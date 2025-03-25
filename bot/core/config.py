@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     search_url_sens: str
     selenium_url: str
     selenium_status_url: str
+    search_url_yakaboo: str
 
     log_level: str = "INFO"
 
