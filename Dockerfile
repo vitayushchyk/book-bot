@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip install poetry
 
 COPY ./pyproject.toml ./poetry.lock ./README.md /app/
-RUN poetry install --no-root --only main
+RUN poetry install --no-root
 
 COPY . ./
 

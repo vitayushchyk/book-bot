@@ -1,6 +1,7 @@
 import logging
 
 from bot.book_shop.base_shop import BaseShop
+from bot.utils.book_details import get_book_details
 
 
 class Sens(BaseShop):
@@ -13,22 +14,19 @@ class Sens(BaseShop):
             if not books_data:
                 logging.warning("No books found in the 'products' array.")
                 return []
+
             normalized_query = " ".join(book_name.lower().strip().split())
             matching_books = []
-            for book in books_data:
-                title = book.get("title", "Title not available")
-                price = book.get("price", "Price not available")
-                url = book.get("url", "#")
-                normalized_title = " ".join(title.lower().strip().split())
 
-                if normalized_query in normalized_title:
-                    matching_books.append(
-                        {
-                            "title": title,
-                            "price": price,
-                            "link": url,
-                        }
+            for book in books_data:
+                book_details = await get_book_details(book, "sens")
+                if book_details:
+                    normalized_title = " ".join(
+                        book_details["title"].lower().strip().split()
                     )
+                    if normalized_query in normalized_title:
+                        matching_books.append(book_details)
+
             if not matching_books:
                 logging.info(
                     f"Found {len(matching_books)} matching books for query: '{book_name}'."
