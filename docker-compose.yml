@@ -7,12 +7,16 @@ services:
       - BOT_TOKEN=${BOT_TOKEN}
       - SEARCH_URL_SENS=${SEARCH_URL_SENS}
       - SELENIUM_URL=${SELENIUM_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
     command: [ "poetry", "run", "python", "main.py" ]
     volumes:
       - .:/app
     depends_on:
       selenium-hub:
         condition: service_healthy
+      redis:
+        condition: service_started
 
   selenium-hub:
     image: selenium/hub:4.13.0
@@ -37,3 +41,11 @@ services:
       - SE_EVENT_BUS_PUBLISH_PORT=4442
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
     shm_size: "2g"
+
+  redis:
+    image: "redis:7.0-alpine"
+    container_name: redis
+    hostname: redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]

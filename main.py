@@ -8,16 +8,18 @@ from telegram.ext import (
     filters,
 )
 
+from bot.book_shop.search_manager import BookSearchManager
+from bot.book_shop.sens import Sens
 from bot.book_shop.yakaboo import Yakaboo
 from bot.core.config import settings
 from bot.driver.chrome_driver import get_driver
-from bot.handlers.start_handler import start
-from bot.handlers.yakaboo_handler import (
+from bot.handlers.shops_handler import (
     NAME_BOOK,
     book_name_handle,
     cancel_handler,
     start_search_book_handler,
 )
+from bot.handlers.start_handler import start
 
 driver = get_driver()
 logging.basicConfig()
@@ -27,7 +29,9 @@ logging.getLogger().setLevel(settings.get_log_level())
 def get_app():
     logging.info("Initializing the bot...")
     try:
-        yakaboo = Yakaboo(driver=driver, yakaboo_url=settings.search_url_yakaboo)
+        yakaboo = Yakaboo(driver, settings.search_url_yakaboo)
+        sens = Sens(driver, settings.search_url_sens)
+        search_manager = BookSearchManager([yakaboo, sens])
 
         app = ApplicationBuilder().token(settings.bot_token).build()
 
@@ -38,7 +42,7 @@ def get_app():
                 CommandHandler(
                     "findbook",
                     lambda update, context: start_search_book_handler(
-                        yakaboo, update, context
+                        search_manager, update, context
                     ),
                 ),
             ],
@@ -47,7 +51,7 @@ def get_app():
                     MessageHandler(
                         filters.TEXT & ~filters.COMMAND,
                         lambda update, context: book_name_handle(
-                            yakaboo, update, context
+                            search_manager, update, context
                         ),
                     )
                 ],
