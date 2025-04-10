@@ -8,6 +8,7 @@ from telegram.ext import (
     filters,
 )
 
+from bot.book_shop.readeat import Readeat
 from bot.book_shop.search_manager import BookSearchManager
 from bot.book_shop.sens import Sens
 from bot.book_shop.yakaboo import Yakaboo
@@ -31,7 +32,8 @@ def get_app():
     try:
         yakaboo = Yakaboo(driver, settings.search_url_yakaboo)
         sens = Sens(driver, settings.search_url_sens)
-        search_manager = BookSearchManager([yakaboo, sens])
+        readeat = Readeat(driver, settings.search_url_readeat)
+        search_manager = BookSearchManager([yakaboo, sens, readeat])
 
         app = ApplicationBuilder().token(settings.bot_token).build()
 
@@ -67,7 +69,3 @@ def get_app():
 
     except Exception as e:
         logging.error(f"Error occurred while initializing the bot: {e}", exc_info=True)
-
-
-if __name__ == "__main__":
-    get_app()
