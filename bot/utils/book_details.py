@@ -28,6 +28,11 @@ async def get_book_details(book, source_type):
             price = book.get("price", "Price not available")
             link = book.get("url", "#")
 
+        elif source_type == "eknygarnya":
+            title = book.get("name", "Title not available")
+            price = book.get("price", "Price not available")
+            link = book.get("url", "#")
+
         else:
             raise ValueError(f"Unsupported source type: {source_type}")
 
@@ -38,31 +43,4 @@ async def get_book_details(book, source_type):
         return None
     except Exception as e:
         logging.error(f"Error in get_book_details: {e}")
-        return None
-
-
-async def get_book_details_from_element(book_element, driver):
-    try:
-
-        book_url = book_element.find_element(By.TAG_NAME, "a").get_attribute("href")
-        book_title = book_element.find_element(By.TAG_NAME, "img").get_attribute("alt")
-
-        try:
-
-            price_wrapper = driver.find_element(By.CSS_SELECTOR, ".price-new")
-            price_element = price_wrapper.find_element(
-                By.CSS_SELECTOR, ".fn_visiblePrice"
-            )
-            book_price = f"{price_element.text.strip()} грн"
-        except Exception:
-            book_price = "Price not available"
-
-        return {
-            "title": book_title,
-            "price": book_price,
-            "url": book_url,
-        }
-
-    except Exception as ex:
-        logging.error(f"Error parsing book element: {str(ex)}")
         return None

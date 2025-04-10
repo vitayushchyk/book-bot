@@ -28,7 +28,7 @@ class Yakaboo(BaseShop):
 
             for book in book_elements:
                 try:
-                    book_details = await get_book_details(book, "yakaboo")
+                    book_details = await get_book_details(book, source_type="yakaboo")
                     if book_details and book_details["title"] not in filter_titles:
                         books.append(book_details)
                         filter_titles.add(book_details["title"])
