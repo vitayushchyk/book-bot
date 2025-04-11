@@ -1,32 +1,58 @@
 import logging
 
-from selenium.webdriver.common.by import By
+import requests
+from bs4 import BeautifulSoup
 
 from bot.book_shop.base_shop import BaseShop
-from bot.utils.book_details import get_book_details, get_book_details_from_element
+from bot.core.config import settings
+from bot.utils.book_details import get_book_details
 
 
 class Readeat(BaseShop):
     async def get_book(self, book_name):
-        search_url_readeat = f"{self.baseurl}{book_name}"
-
-        self.driver.get(search_url_readeat)
+        search_url_readeat = f"{settings.search_url_readeat}{book_name}"
 
         try:
-            book_elements = self.driver.find_elements(By.CSS_SELECTOR, ".card-img-top")
-            matching_books = []
+            response = requests.get(search_url_readeat)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, features="html.parser")
 
-            for book_element in book_elements:
+            books = []
+            book_elements = soup.select("div.fn_product.card.product-card")
 
-                book_details = await get_book_details_from_element(
-                    book_element, self.driver
-                )
-                if book_details:
-                    raw_book_data = await get_book_details(book_details, "readeat")
-                    if raw_book_data:
-                        matching_books.append(raw_book_data)
+            for index, book_element in enumerate(book_elements, start=1):
+                try:
 
-            return matching_books
+                    book_data = {
+                        "title": book_element.get("data-name", "Title not available"),
+                        "price": f"{book_element.get('data-price', 'Price not available')} грн",
+                        "url": (
+                            book_element.select_one("a.d-block")["href"]
+                            if book_element.select_one("a.d-block")
+                            else "URL not available"
+                        ),
+                    }
+
+                    book_details = await get_book_details(
+                        book_data, source_type="readeat"
+                    )
+
+                    if book_details:
+                        books.append(book_details)
+
+                    else:
+                        logging.warning(
+                            f"Skipping book {index} due to missing details."
+                        )
+
+                except Exception as e:
+                    logging.error(f"Error processing book {index}: {e}")
+
+            return books
+
+        except requests.RequestException as e:
+            logging.error(f"Error during HTTP request: {e}")
+            return []
         except Exception as e:
-            logging.error(f"Error loading books from readeat: {str(e)}")
+            logging.error(f"Unexpected error: {e}")
             return []

@@ -19,7 +19,7 @@ class Sens(BaseShop):
             matching_books = []
 
             for book in books_data:
-                book_details = await get_book_details(book, "sens")
+                book_details = await get_book_details(book, source_type="sens")
                 if book_details:
                     normalized_title = " ".join(
                         book_details["title"].lower().strip().split()
