@@ -6,6 +6,11 @@ from bs4 import BeautifulSoup
 from bot.book_shop.base_shop import BaseShop
 from bot.core.config import settings
 from bot.utils.book_details import get_book_details
+from bot.utils.book_filters import (
+    filter_books_by_exact_match,
+    filter_books_by_similarity,
+    sort_books_by_relevance,
+)
 
 
 class Readeat(BaseShop):
@@ -18,11 +23,11 @@ class Readeat(BaseShop):
             soup = BeautifulSoup(response.text, features="html.parser")
 
             books = []
+            filter_titles = set()
             book_elements = soup.select("div.fn_product.card.product-card")
 
             for index, book_element in enumerate(book_elements, start=1):
                 try:
-
                     book_data = {
                         "title": book_element.get("data-name", "Title not available"),
                         "price": f"{book_element.get('data-price', 'Price not available')} грн",
@@ -37,16 +42,23 @@ class Readeat(BaseShop):
                         book_data, source_type="readeat"
                     )
 
-                    if book_details:
+                    if book_details and book_details["title"] not in filter_titles:
                         books.append(book_details)
-
+                        filter_titles.add(book_details["title"])
                     else:
                         logging.warning(
-                            f"Skipping book {index} due to missing details."
+                            f"Skipping duplicate or incomplete book {index}: {book_data.get('title')}"
                         )
 
                 except Exception as e:
                     logging.error(f"Error processing book {index}: {e}")
+
+            books = await filter_books_by_exact_match(books, book_name)
+
+            if not books:
+                books = await filter_books_by_similarity(books, book_name)
+
+            books = await sort_books_by_relevance(books, book_name)
 
             return books
 

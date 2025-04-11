@@ -1,21 +1,30 @@
 import logging
 
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
-from selenium.webdriver.common.by import By
+import requests
+from bs4 import BeautifulSoup
 
 from bot.book_shop.base_shop import BaseShop
 from bot.utils.book_details import get_book_details
+from bot.utils.book_filters import (
+    filter_books_by_exact_match,
+    filter_books_by_similarity,
+    sort_books_by_relevance,
+)
 
 
 class Yakaboo(BaseShop):
     async def get_book(self, book_name: str) -> list:
-
         search_url_yakaboo = f"{self.baseurl}/search?q={book_name.strip()}"
+
         try:
-            self.driver.get(search_url_yakaboo)
-            book_elements = self.driver.find_elements(
-                By.CSS_SELECTOR, "div.category-card"
-            )
+            response = requests.get(search_url_yakaboo)
+            response.raise_for_status()
+            if response.encoding.lower() != "utf-8":
+                response.encoding = "utf-8"
+
+            soup = BeautifulSoup(response.text, features="html.parser")
+
+            book_elements = soup.select("div.category-card")
 
             if not book_elements:
                 logging.warning(
@@ -26,21 +35,52 @@ class Yakaboo(BaseShop):
             books = []
             filter_titles = set()
 
-            for book in book_elements:
+            for index, book in enumerate(book_elements):
                 try:
-                    book_details = await get_book_details(book, source_type="yakaboo")
-                    if book_details and book_details["title"] not in filter_titles:
-                        books.append(book_details)
-                        filter_titles.add(book_details["title"])
+                    title_tag = book.select_one("a.category-card__image > div > img")
+                    title = title_tag["alt"] if title_tag else None
+
+                    price_tag = book.select_one(
+                        "div.category-card__content .category-card__price"
+                    )
+                    price = price_tag.text.strip() if price_tag else None
+                    url_tag = book.select_one("a.category-card__image")
+                    url = f"{self.baseurl}{url_tag['href']}" if url_tag else None
+
+                    if title and url and title not in filter_titles:
+                        book_data = {
+                            "title": title,
+                            "price": price,
+                            "url": url,
+                        }
+                        normalized_book = await get_book_details(
+                            book_data, source_type="yakaboo"
+                        )
+                        books.append(normalized_book)
+                        filter_titles.add(title)
+                    else:
+                        logging.info(
+                            f"Duplicate or incomplete book entry skipped: {title}"
+                        )
 
                 except Exception as e:
-                    logging.error(f"Error while extracting book details: {e}")
+                    logging.error(
+                        f"Error while processing book element #{index + 1}: {e}"
+                    )
                     continue
 
+            books = await filter_books_by_exact_match(books, book_name)
+
+            if not books:
+                books = await filter_books_by_similarity(books, book_name)
+
+            books = await sort_books_by_relevance(books, book_name)
+
+            logging.info(f"Successfully fetched {len(books)} books from Yakaboo.")
             return books
 
-        except (TimeoutException, NoSuchElementException) as ex:
-            logging.error(f"Error fetching books on Yakaboo: {ex}")
+        except requests.exceptions.RequestException as ex:
+            logging.error(f"HTTP error while fetching books on Yakaboo: {ex}")
             return []
         except Exception as e:
             logging.error(f"Unexpected error while processing Yakaboo books: {e}")
