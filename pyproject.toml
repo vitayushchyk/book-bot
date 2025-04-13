@@ -13,13 +13,14 @@ python-telegram-bot = "^21.11.1"
 beautifulsoup4 = "^4.13.3"
 pydantic-settings = "^2.8.1"
 pydantic = "^2.10.6"
-watchfiles = "^1.0.4"
 selenium = ">=4.0.0"
 webdriver-manager = "^4.0.2"
 httpx = "^0.28.1"
 redis = "^5.2.1"
 asyncio-redis = "^0.16.0"
 asyncio = "^3.4.3"
+
+
 
 
 
