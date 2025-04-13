@@ -13,6 +13,7 @@ from bot.book_shop.readeat import Readeat
 from bot.book_shop.search_manager import BookSearchManager
 from bot.book_shop.sens import Sens
 from bot.book_shop.yakaboo import Yakaboo
+from bot.book_shop.zhupansky_publisher import PublisherParser
 from bot.core.config import settings
 from bot.driver.chrome_driver import get_driver
 from bot.handlers.shops_handler import (
@@ -35,8 +36,10 @@ def get_app():
         sens = Sens(driver, settings.search_url_sens)
         readeat = Readeat(driver, settings.search_url_readeat)
         eknygarnya = EKnygarnya(driver, settings.search_url_eknygarnya)
-        search_manager = BookSearchManager([yakaboo, sens, readeat, eknygarnya])
-
+        zhupansky = PublisherParser(driver, settings.search_url_zhupansky)
+        search_manager = BookSearchManager(
+            [yakaboo, sens, readeat, eknygarnya, zhupansky]
+        )
         app = ApplicationBuilder().token(settings.bot_token).build()
 
         app.add_handler(CommandHandler("start", start))
