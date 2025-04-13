@@ -4,11 +4,6 @@ from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
 from bot.book_shop.search_manager import BookSearchManager
-from bot.utils.book_filters import (
-    filter_books_by_exact_match,
-    filter_books_by_similarity,
-    sort_books_by_relevance,
-)
 
 NAME_BOOK = range(1)
 
@@ -20,9 +15,8 @@ async def start_search_book_handler(
 ):
     logging.info("Starting the book search interaction.")
     await update.message.reply_text(
-        "`✨Йо, шукач✨`\n"
+        text="`✨Йо, шукач✨`\n"
         "`Введи назву книги, котру хочеш знайти 📚`\n"
-        "`BTW, якщо не шариш назву - шукай за автором ✍️`\n\n"
         "`Якщо передумав - тільки без драми 👉` /cancel 🚪",
         parse_mode="Markdown",
     )
@@ -37,68 +31,69 @@ async def book_name_handle(
     book_name = update.message.text
     logging.info(f"Received a book name from user: {book_name}")
     await update.message.reply_text(
-        f"`Шукаю щось круте для тебе за запитом: '{book_name}' 🔍` \n"
-        f"`Це займе трохи часу, поки магічний пилок почне працювати💨🧚🏻‍♀️`",
+        text=f"`Шукаю щось круте для тебе за запитом: '{book_name}' 🔍` \n"
+        f"`Wait a sec, 🧚🏻‍ махає крилами, і це займає трохи часу`",
         parse_mode="Markdown",
     )
     try:
 
         books_info = await manager.fetch_books_from_all_libraries(book_name)
 
-        filtered_books = await filter_books_by_exact_match(books_info, book_name)
-        if not filtered_books:
-            filtered_books = await filter_books_by_similarity(books_info, book_name)
+        if books_info:
+            grouped_list = []
+            grouped_books = {}
 
-        if filtered_books:
+            for book in books_info:
+                shop_name = book.get("shop", "Unknown")
+                if shop_name not in grouped_books:
+                    grouped_books[shop_name] = []
+                grouped_books[shop_name].append(book)
 
-            sorted_books = await sort_books_by_relevance(filtered_books, book_name)
+            for shop_name, books in grouped_books.items():
+                grouped_list.append({"shop": shop_name, "books": books})
 
-            response = (
-                f"`Готуй свої money 💰`\n"
-                f"`Ось що 🧚 знайшла для` *'{book_name}'*:\n\n"
-            )
-            current_message = response
-            messages = []
+            response = ""
+            for group in grouped_list:
+                shop_name = group["shop"]
+                books = group["books"]
 
-            for book in sorted_books:
+                response += f"`В кіоску: {shop_name.upper()}`\n\n"
+                for book in books:
+                    response += (
+                        f"🔵 `Шо по назві?` {book.get('title', 'Гугл поламався')}\n"
+                        f"🟡 `Шо по чом?` {book.get('price', 'Мабуть, безцінна')}\n"
+                        f"[👉 Гоу за нею]({book.get('link', '#')})\n\n"
+                    )
 
-                book_info = (
-                    f"🔵 `Назва:` {book['title']}\n"
-                    f"🟡 `Ціна:` {book['price']}\n"
-                    f"[👉 Зазирни сюди]({book['link']})\n\n"
-                )
-                if len(current_message) + len(book_info) > 4000:
-                    messages.append(current_message)
-                    current_message = response + book_info
-                else:
-                    current_message += book_info
+            if len(response) > 4000:
 
-            if current_message:
-                messages.append(current_message)
+                parts = [response[i : i + 4000] for i in range(0, len(response), 4000)]
+                for part in parts:
+                    await update.message.reply_text(part, parse_mode="Markdown")
+            else:
 
-            for message in messages:
-                await update.message.reply_text(message, parse_mode="Markdown")
+                await update.message.reply_text(response, parse_mode="Markdown")
 
         else:
 
             logging.warning(f"No books found for the query: '{book_name}'")
             await update.message.reply_text(
-                f"`Воу-воу, стоПЕ`\n\n"
-                f"`Книга з назвою` *'{book_name}'* `настільки ексклюзивна, що навіть бібліотеки такої не знають! 📚`\n\n"
+                text="`Воу-воу, стоПЕ`\n\n"
+                f"`Книга з назвою` *'{book_name}'* `настільки ексклюзивна, що навіть гугл не знає 📚`\n\n"
                 f"`Може, перевір правопис чи спробуй щось інше? 😉`",
                 parse_mode="Markdown",
             )
     except Exception as e:
         logging.error(f"Error while handling the book search: {e}")
         await update.message.reply_text(
-            f"`пу ПУ пу 🚨` \n\n"
+            text=f"`пу ПУ пу 🚨`\n\n"
             f"`Мабуть, розробниця переплутала код із чашкою капуча 🍺`\n"
             f"`Спробуй трохи пізніше 🙏`",
             parse_mode="Markdown",
         )
 
     await update.message.reply_text(
-        "`️Книжкова фея ще в ділі 🧚`\n\n"
+        text="`️Книжкова фея ще в ділі 🧚`\n\n"
         "`Від тебе — назва книги, від мене — пошук 🪄`\n"
         "`Якщо передумав — 👉` /cancel 🚪",
         parse_mode="Markdown",
@@ -109,7 +104,7 @@ async def book_name_handle(
 async def cancel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE = None):
     logging.info("User canceled the book search.")
     await update.message.reply_text(
-        f"`Охорона - відміна 👌`\n"
+        text="`Охорона - відміна 👌`\n"
         f"`Якщо передумаєш — 🧚 завжди тут, як Wi-Fi сусіда 📡`",
         parse_mode="Markdown",
     )
