@@ -7,7 +7,7 @@ async def get_book_details(book, source_type):
             title = book.get("title", "Title not available")
             price = book.get("price", "Price not available")
             link = book.get("url", "#")
-        elif source_type == "eknygarnya":
+        elif source_type in ["eknygarnya", "ksd"]:
             title = book.get("name", "Title not available")
             price = book.get("price", "Price not available")
             link = book.get("url", "#")
@@ -18,6 +18,11 @@ async def get_book_details(book, source_type):
         else:
             raise ValueError(f"Unsupported source type: {source_type}")
 
+        if isinstance(price, str) and price.isdigit():
+            price = f"{price} грн"
+        elif isinstance(price, (int, float)):
+            price = f"{int(price)} грн"
+
         shop_name = {
             "yakaboo": "Yakaboo",
             "sens": "Sens",
@@ -25,6 +30,7 @@ async def get_book_details(book, source_type):
             "eknygarnya": "E-Knygarnya",
             "zhupansky_publisher": "Видавництво Жупанського",
             "bookling": "Bookling",
+            "ksd": "КСД",
         }
 
         return {

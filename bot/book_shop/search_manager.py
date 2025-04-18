@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import List
 
-from bot.book_shop.base_shop import BaseShop
+from bot.base.base_shop import BaseShop
 from bot.utils.cache_manager import CacheManager
 
 

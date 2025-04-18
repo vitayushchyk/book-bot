@@ -1,6 +1,6 @@
 import logging
 
-from bot.book_shop.base_shop import BaseShop
+from bot.base.base_shop import BaseShop
 from bot.utils.book_details import get_book_details
 
 
