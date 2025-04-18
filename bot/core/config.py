@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     search_url_readeat: str
     search_url_eknygarnya: str
     search_url_zhupansky: str
+    search_url_bookling: str
     redis_host: str
     redis_port: int
 

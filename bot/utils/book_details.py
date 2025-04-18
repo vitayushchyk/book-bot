@@ -3,7 +3,7 @@ import logging
 
 async def get_book_details(book, source_type):
     try:
-        if source_type in ["yakaboo", "sens", "readeat"]:
+        if source_type in ["yakaboo", "sens", "readeat", "bookling"]:
             title = book.get("title", "Title not available")
             price = book.get("price", "Price not available")
             link = book.get("url", "#")
@@ -24,6 +24,7 @@ async def get_book_details(book, source_type):
             "readeat": "Readeat",
             "eknygarnya": "E-Knygarnya",
             "zhupansky_publisher": "Видавництво Жупанського",
+            "bookling": "Bookling",
         }
 
         return {
