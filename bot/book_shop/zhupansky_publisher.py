@@ -3,7 +3,7 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 
-from bot.book_shop.base_shop import BaseShop
+from bot.base.base_shop import BaseShop
 from bot.core.config import settings
 from bot.utils.book_details import get_book_details
 from bot.utils.book_filters import (

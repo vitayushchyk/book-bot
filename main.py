@@ -10,6 +10,7 @@ from telegram.ext import (
 
 from bot.book_shop.bookling import Bookling
 from bot.book_shop.e_knygarnya import EKnygarnya
+from bot.book_shop.ksd import KSD
 from bot.book_shop.readeat import Readeat
 from bot.book_shop.search_manager import BookSearchManager
 from bot.book_shop.sens import Sens
@@ -39,8 +40,9 @@ def get_app():
         eknygarnya = EKnygarnya(driver, settings.search_url_eknygarnya)
         zhupansky = PublisherParser(driver, settings.search_url_zhupansky)
         bookling = Bookling(driver, settings.search_url_bookling)
+        ksd = KSD(driver, settings.search_url_ksd)
         search_manager = BookSearchManager(
-            [yakaboo, sens, readeat, eknygarnya, zhupansky, bookling],
+            [yakaboo, sens, readeat, eknygarnya, zhupansky, bookling, ksd],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
 

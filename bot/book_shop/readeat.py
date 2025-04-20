@@ -3,7 +3,7 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 
-from bot.book_shop.base_shop import BaseShop
+from bot.base.base_shop import BaseShop
 from bot.core.config import settings
 from bot.utils.book_details import get_book_details
 from bot.utils.book_filters import (
@@ -29,8 +29,10 @@ class Readeat(BaseShop):
             for index, book_element in enumerate(book_elements, start=1):
                 try:
                     book_data = {
-                        "title": book_element.get("data-name", "Title not available"),
-                        "price": f"{book_element.get('data-price', 'Price not available')} грн",
+                        "title": book_element.get(
+                            key="data-name", default="Title not available"
+                        ),
+                        "price": f"{book_element.get(key='data-price', default='Price not available')} грн",
                         "url": (
                             book_element.select_one("a.d-block")["href"]
                             if book_element.select_one("a.d-block")

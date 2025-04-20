@@ -7,5 +7,4 @@ class BaseShop(ABC):
         self.baseurl = baseurl
 
     @abstractmethod
-    async def get_book(self, book_name: str):
-        pass
+    async def get_book(self, book_name: str): ...
