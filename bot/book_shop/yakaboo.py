@@ -15,14 +15,13 @@ from bot.utils.book_filters import (
 
 class Yakaboo(BaseShop):
     async def get_book(self, book_name: str) -> list:
-        # Формуємо URL для пошуку
+
         search_url_yakaboo = f"{self.baseurl}/search?q={book_name.strip()}"
 
         try:
             response = requests.get(search_url_yakaboo)
             response.raise_for_status()
 
-            # Встановлюємо кодування, якщо воно відсутнє або не 'utf-8'
             if response.encoding.lower() != "utf-8":
                 response.encoding = "utf-8"
 
@@ -41,7 +40,7 @@ class Yakaboo(BaseShop):
 
             for index, book in enumerate(book_elements):
                 try:
-                    # Оновлення класів та логіки для вибору елементів книги
+
                     title_tag = book.select_one("a.ui-card-title.category-card__name")
                     title = title_tag.text.strip() if title_tag else None
 
@@ -52,14 +51,13 @@ class Yakaboo(BaseShop):
                     url_tag = book.select_one("a.category-card__image")
                     url = f"{self.baseurl}{url_tag['href']}" if url_tag else None
 
-                    # Перевіряємо, чи була книга вже оброблена
                     if title and url and title not in filter_titles:
                         book_data = {
                             "title": title,
                             "price": price,
                             "url": url,
                         }
-                        # Отримуємо детальну інформацію про книгу
+
                         normalized_book = await get_book_details(
                             book_data, source_type="yakaboo"
                         )
@@ -76,14 +74,11 @@ class Yakaboo(BaseShop):
                     )
                     continue
 
-            # Фільтруємо книги за точною відповідністю
             books = await filter_books_by_exact_match(books, book_name)
 
-            # Якщо точних відповідностей немає, фільтруємо за подібністю
             if not books:
                 books = await filter_books_by_similarity(books, book_name)
 
-            # Сортуємо книги за релевантністю
             books = await sort_books_by_relevance(books, book_name)
 
             logging.info(f"Successfully fetched {len(books)} books from Yakaboo.")
