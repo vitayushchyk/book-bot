@@ -7,7 +7,7 @@ async def get_book_details(book, source_type):
             title = book.get("title", "Title not available")
             price = book.get("price", "Price not available")
             link = book.get("url", "#")
-        elif source_type in ["eknygarnya", "ksd"]:
+        elif source_type in ["eknygarnya", "ksd", "vivat"]:
             title = book.get("name", "Title not available")
             price = book.get("price", "Price not available")
             link = book.get("url", "#")
@@ -31,6 +31,7 @@ async def get_book_details(book, source_type):
             "zhupansky_publisher": "Видавництво Жупанського",
             "bookling": "Bookling",
             "ksd": "КСД",
+            "vivat": "Vivat",
         }
 
         return {

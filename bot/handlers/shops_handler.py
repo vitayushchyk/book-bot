@@ -3,7 +3,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from bot.book_shop.search_manager import BookSearchManager
+from bot.services.search_manager import BookSearchManager
 
 NAME_BOOK = range(1)
 

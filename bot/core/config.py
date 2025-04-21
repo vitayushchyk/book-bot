@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     search_url_zhupansky: str
     search_url_bookling: str
     search_url_ksd: str
+    search_url_vivat: str
     redis_host: str
     redis_port: int
 
