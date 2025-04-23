@@ -9,6 +9,7 @@ from bot.utils.book_details import get_book_details
 from bot.utils.book_filters import (
     filter_books_by_exact_match,
     filter_books_by_similarity,
+    sort_books_by_price,
     sort_books_by_relevance,
 )
 
@@ -61,6 +62,7 @@ class Readeat(BaseShop):
                 books = await filter_books_by_similarity(books, book_name)
 
             books = await sort_books_by_relevance(books, book_name)
+            books = await sort_books_by_price(books)
 
             return books
 

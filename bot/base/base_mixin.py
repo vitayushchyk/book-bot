@@ -1,23 +1,41 @@
 import logging
+from typing import Dict, List
 
-import requests
+import aiohttp
 
 from bot.utils.book_details import get_book_details
 from bot.utils.book_filters import (
     filter_books_by_exact_match,
     filter_books_by_similarity,
+    sort_books_by_price,
     sort_books_by_relevance,
 )
 
 
 class FetchBooksMixin:
-    async def fetch_books(self, search_url: str, source_type: str, book_name: str):
+    async def fetch_books(
+        self, search_url: str, source_type: str, book_name: str
+    ) -> List[Dict]:
+        if not search_url or not search_url.startswith("http"):
+            logging.error(f"Invalid search URL: {search_url} for {source_type}")
+            return []
+
+        if not source_type or not book_name:
+            logging.error("Source type or book name is missing.")
+            return []
+
         try:
             logging.info(f"Fetching URL: {search_url}")
-            response = requests.get(search_url)
-            response.raise_for_status()
 
-            data = response.json()
+            async with aiohttp.ClientSession() as session:
+                async with session.get(search_url, timeout=5) as response:
+                    if response.status != 200:
+                        logging.error(
+                            f"Failed to fetch data. HTTP status code: {response.status}"
+                        )
+                        return []
+
+                    data = await response.json()
 
             logging.info("Data successfully fetched.")
             books = []
@@ -27,7 +45,6 @@ class FetchBooksMixin:
             for group in item_groups:
                 for item in group.get("items", []):
                     try:
-
                         formatted_book = await get_book_details(
                             item, source_type=source_type
                         )
@@ -37,22 +54,28 @@ class FetchBooksMixin:
                         ):
                             books.append(formatted_book)
                             filter_titles.add(formatted_book["title"])
+                            logging.info(f"Added book: {formatted_book['title']}")
                         else:
                             logging.warning(
                                 f"Skipping duplicate or incomplete book: {item.get('name', 'No title provided')}"
                             )
+                    except KeyError as e:
+                        logging.error(f"Missing key in item data: {e}")
                     except Exception as e:
                         logging.error(f"Error processing book: {e}")
                         continue
 
-            books = await filter_books_by_exact_match(books, book_name)
-            if not books:
-                books = await filter_books_by_similarity(books, book_name)
-            books = await sort_books_by_relevance(books, book_name)
+            if books:
+                books = await filter_books_by_exact_match(books, book_name)
+                if not books:
+                    books = await filter_books_by_similarity(books, book_name)
+                if books:
+                    books = await sort_books_by_relevance(books, book_name)
+                    books = await sort_books_by_price(books)
 
             return books
 
-        except requests.RequestException as e:
+        except aiohttp.ClientError as e:
             logging.error(f"API request error: {e}")
             return []
         except Exception as e:

@@ -35,16 +35,19 @@ logging.getLogger().setLevel(settings.get_log_level())
 def get_app():
     logging.info("Initializing the bot...")
     try:
-        yakaboo = Yakaboo(driver, settings.search_url_yakaboo)
-        sens = Sens(driver, settings.search_url_sens)
-        readeat = Readeat(driver, settings.search_url_readeat)
-        eknygarnya = EKnygarnya(driver, settings.search_url_eknygarnya)
-        zhupansky = PublisherParser(driver, settings.search_url_zhupansky)
+        # yakaboo = Yakaboo(driver, settings.search_url_yakaboo)
+        # sens = Sens(driver, settings.search_url_sens)
+        # readeat = Readeat(driver, settings.search_url_readeat)
+        # eknygarnya = EKnygarnya(driver, settings.search_url_eknygarnya)
+        # zhupansky = PublisherParser(driver, settings.search_url_zhupansky)
         bookling = Bookling(driver, settings.search_url_bookling)
-        ksd = KSD(driver, settings.search_url_ksd)
-        vivat = Vivat(driver, settings.search_url_vivat)
+        # ksd = KSD(driver, settings.search_url_ksd)
+        # vivat = Vivat(driver, settings.search_url_vivat)
+        # search_manager = BookSearchManager(
+        #     [yakaboo, sens, readeat, eknygarnya, zhupansky, bookling, ksd, vivat],
+        # )
         search_manager = BookSearchManager(
-            [yakaboo, sens, readeat, eknygarnya, zhupansky, bookling, ksd, vivat],
+            [bookling],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
 

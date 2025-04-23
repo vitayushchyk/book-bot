@@ -3,12 +3,12 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 
-from bot.base.base_mixin import FetchBooksMixin
 from bot.base.base_shop import BaseShop
 from bot.utils.book_details import get_book_details
 from bot.utils.book_filters import (
     filter_books_by_exact_match,
     filter_books_by_similarity,
+    sort_books_by_price,
     sort_books_by_relevance,
 )
 
@@ -80,6 +80,7 @@ class Yakaboo(BaseShop):
                 books = await filter_books_by_similarity(books, book_name)
 
             books = await sort_books_by_relevance(books, book_name)
+            books = await sort_books_by_price(books)
 
             logging.info(f"Successfully fetched {len(books)} books from Yakaboo.")
             return books

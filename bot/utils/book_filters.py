@@ -30,3 +30,7 @@ async def sort_books_by_relevance(books, search_query):
         ).ratio(),
         reverse=True,
     )
+
+
+async def sort_books_by_price(books):
+    return sorted(books, key=lambda book: book["price"])

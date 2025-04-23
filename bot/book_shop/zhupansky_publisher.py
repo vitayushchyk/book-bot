@@ -9,6 +9,7 @@ from bot.utils.book_details import get_book_details
 from bot.utils.book_filters import (
     filter_books_by_exact_match,
     filter_books_by_similarity,
+    sort_books_by_price,
     sort_books_by_relevance,
 )
 
@@ -113,6 +114,7 @@ class PublisherParser(BaseShop):
                 )
 
             sorted_books = await sort_books_by_relevance(filtered_books, book_name)
+            await sort_books_by_price(books)
 
             return sorted_books
 
