@@ -1,16 +1,9 @@
 import logging
 
-from bs4 import BeautifulSoup
-
 from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.base.base_shop import BaseShop
-from bot.utils.book_details import get_book_details
-from bot.utils.book_filters import (
-    filter_books_by_exact_match,
-    filter_books_by_similarity,
-    sort_books_by_price,
-    sort_books_by_relevance,
-)
+from bot.parser.bookling_parser import BooklingBookParser
+from bot.services.bookling_processor import BookDetailsAdder, BookFilterAndSorter
 
 PARSING_SETTINGS = {
     "bookling": {
@@ -23,59 +16,24 @@ PARSING_SETTINGS = {
 
 
 class Bookling(BaseShop, FetchPageMixin):
-
     async def get_book(self, query: str):
         if not query.strip():
             logging.warning("Empty query provided!")
             return []
 
-        search_url = f"{self.baseurl}/catalog/?q={query.strip()}"
-        logging.info(f"Searching books in Bookling with URL: {search_url}")
-
-        get_html = await self.fetch_page(search_url)
-        if not get_html:
-            logging.error(f"Failed to fetch books from URL: {search_url}")
+        fetcher = BooklingBookParser(self.baseurl, PARSING_SETTINGS["bookling"])
+        html_content = await fetcher.fetch_books_html(self.fetch_page, query)
+        if not html_content:
+            logging.error(f"Failed to fetch books for query: {query}")
             return []
+        books = fetcher.parse_books_from_html(html_content)
 
-        soup = BeautifulSoup(get_html, features="html.parser")
-        books = soup.select(PARSING_SETTINGS["bookling"]["book_container"])
+        details_adder = BookDetailsAdder()
+        detailed_books = await details_adder.add_details_to_books(books)
 
-        logging.info(f"Found {len(books)} book items in the HTML content.")
+        filter_and_sorter = BookFilterAndSorter()
+        processed_books = await filter_and_sorter.filter_and_sort_books(
+            detailed_books, query
+        )
 
-        results = []
-        for book in books:
-
-            get_title_element = book.select_one(PARSING_SETTINGS["bookling"]["title"])
-            title = get_title_element.text.strip() if get_title_element else ""
-
-            get_price_element = book.select_one(PARSING_SETTINGS["bookling"]["price"])
-            price = f"{get_price_element.text.strip()}" if get_price_element else ""
-
-            get_url_element = book.select_one(PARSING_SETTINGS["bookling"]["url"])
-            url = f"{self.baseurl}{get_url_element['href']}" if get_url_element else ""
-
-            if not title or not price or not url:
-                logging.warning(f"Skipping book with missing data: {book}")
-                continue
-
-            book_data = {"title": title, "price": price, "url": url}
-
-            detailed_book = await get_book_details(book_data, source_type="bookling")
-            if detailed_book:
-                results.append(detailed_book)
-
-        logging.info(f"Total books after gathering details: {len(results)}")
-
-        filtered_books = await filter_books_by_exact_match(results, query)
-
-        if not filtered_books:
-            filtered_books = await filter_books_by_similarity(results, query)
-
-        logging.info(f"Books after filtering: {len(filtered_books)}")
-
-        sorted_books = await sort_books_by_relevance(filtered_books, query)
-        sorted_books = await sort_books_by_price(sorted_books)
-
-        logging.info(f"Books after sorting: {len(sorted_books)}")
-
-        return sorted_books
+        return processed_books

@@ -2,10 +2,12 @@ import logging
 
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
+from telegram.helpers import escape_markdown
 
 from bot.services.search_manager import BookSearchManager
 
 NAME_BOOK = range(1)
+MAX_MESSAGE_LENGTH = 4000
 
 
 async def start_search_book_handler(
@@ -36,7 +38,6 @@ async def book_name_handle(
         parse_mode="Markdown",
     )
     try:
-
         books_info = await manager.fetch_books_from_all_libraries(book_name)
 
         if books_info:
@@ -52,30 +53,51 @@ async def book_name_handle(
             for shop_name, books in grouped_books.items():
                 grouped_list.append({"shop": shop_name, "books": books})
 
-            response = ""
+            response_parts = []
+            current_response = ""
+
             for group in grouped_list:
                 shop_name = group["shop"]
                 books = group["books"]
 
-                response += f"`В кіоску: {shop_name.upper()}`\n\n"
+                escaped_shop_name = escape_markdown(shop_name.upper(), version=2)
+
+                shop_response = f"`В кіоску: - ✨{escaped_shop_name}✨`\n\n"
+
                 for book in books:
-                    response += (
-                        f"🔵 `Шо по назві?` {book.get('title', 'Гугл поламався')}\n"
-                        f"🟡 `Шо по чом?` {book.get('price', 'Мабуть, безцінна')}\n"
-                        f"[👉 Гоу за нею]({book.get('link', '#')})\n\n"
+                    escaped_title = escape_markdown(
+                        book.get("title", "Гугл поламався"), version=2
+                    )
+                    escaped_price = escape_markdown(
+                        book.get("price", "Мабуть, безцінна"), version=2
+                    )
+                    escaped_link = book.get("link", "#")
+
+                    book_response = (
+                        f"`🔵🟡🔵🟡🔵`\n\n"
+                        f"📝`Шо по назві?` {escaped_title}\n"
+                        f"💸 `Шо по чом?` {escaped_price}\n"
+                        f"[🚀 Гоу за нею]({escaped_link})\n\n"
                     )
 
-            if len(response) > 4000:
+                    if (
+                        len(current_response) + len(shop_response) + len(book_response)
+                        > MAX_MESSAGE_LENGTH
+                    ):
+                        response_parts.append(current_response)
 
-                parts = [response[i : i + 4000] for i in range(0, len(response), 4000)]
-                for part in parts:
-                    await update.message.reply_text(part, parse_mode="Markdown")
-            else:
+                        current_response = ""
 
-                await update.message.reply_text(response, parse_mode="Markdown")
+                    if shop_response not in current_response:
+                        current_response += shop_response
+                    current_response += book_response
 
+            if current_response:
+                response_parts.append(current_response)
+
+            for part in response_parts:
+                await update.message.reply_text(part, parse_mode="MarkdownV2")
         else:
-
             logging.warning(f"No books found for the query: '{book_name}'")
             await update.message.reply_text(
                 text="`Воу-воу, стоПЕ`\n\n"
