@@ -20,7 +20,7 @@ class Readeat(BaseShop, FetchPageMixin):
             if not html_content:
                 logging.error("Failed to fetch books HTML content.")
                 return []
-            books = parser.parse_books_from_html(html_content)
+            books = await parser.parse_books_from_html(html_content)
 
             if not books:
                 logging.warning("No books found after parsing.")

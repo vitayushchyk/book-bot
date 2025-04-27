@@ -26,7 +26,7 @@ class Bookling(BaseShop, FetchPageMixin):
         if not html_content:
             logging.error(f"Failed to fetch books for query: {query}")
             return []
-        books = fetcher.parse_books_from_html(html_content)
+        books = await fetcher.parse_books_from_html(html_content)
 
         details_adder = BookDetailsAdder()
         detailed_books = await details_adder.add_details_to_books(books)

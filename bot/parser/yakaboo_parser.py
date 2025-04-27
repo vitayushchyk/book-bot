@@ -23,7 +23,7 @@ class YakabooBookParser:
         logging.info(f"Fetching Yakaboo books from URL: {search_url}")
         return await fetch_page(search_url)
 
-    def parse_books_from_html(self, html: str) -> List[dict]:
+    async def parse_books_from_html(self, html: str) -> List[dict]:
         soup = BeautifulSoup(html, features="html.parser")
         book_elements = soup.select(self.settings["book_container"])
         logging.info(f"Found {len(book_elements)} books on Yakaboo.")

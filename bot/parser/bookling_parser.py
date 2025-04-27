@@ -14,7 +14,7 @@ class BooklingBookParser:
         logging.info(f"Searching books with URL: {search_url}")
         return await fetch_page(search_url)
 
-    def parse_books_from_html(self, html: str) -> List[dict]:
+    async def parse_books_from_html(self, html: str) -> List[dict]:
         soup = BeautifulSoup(html, features="html.parser")
         books = soup.select(self.parsing_settings["book_container"])
 

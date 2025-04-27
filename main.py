@@ -15,7 +15,7 @@ from bot.book_shop.readeat import Readeat
 from bot.book_shop.sens import Sens
 from bot.book_shop.vivat import Vivat
 from bot.book_shop.yakaboo import Yakaboo
-from bot.book_shop.zhupansky_publisher import PublisherParser
+from bot.book_shop.zhupansky_publisher import ZhupanskyPublisher
 from bot.core.config import settings
 from bot.driver.chrome_driver import get_driver
 from bot.handlers.shops_handler import (
@@ -36,22 +36,18 @@ def get_app():
     logging.info("Initializing the bot...")
     try:
         yakaboo = Yakaboo(driver, settings.search_url_yakaboo)
-        # sens = Sens(driver, settings.search_url_sens)
+        sens = Sens(driver, settings.search_url_sens)
         readeat = Readeat(driver, settings.search_url_readeat)
         # eknygarnya = EKnygarnya(driver, settings.search_url_eknygarnya)
-        # zhupansky = PublisherParser(driver, settings.search_url_zhupansky)
+        zhupansky = ZhupanskyPublisher(driver, settings.search_url_zhupansky)
         bookling = Bookling(driver, settings.search_url_bookling)
         # ksd = KSD(driver, settings.search_url_ksd)
-        # vivat = Vivat(driver, settings.search_url_vivat)
+        vivat = Vivat(driver, settings.search_url_vivat)
         # search_manager = BookSearchManager(
         #     [yakaboo, sens, readeat, eknygarnya, zhupansky, bookling, ksd, vivat],
         # )
         search_manager = BookSearchManager(
-            [
-                bookling,
-                readeat,
-                yakaboo,
-            ],
+            [bookling, readeat, yakaboo, sens],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
 

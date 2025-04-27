@@ -9,7 +9,6 @@ from bot.services.yakaboo_processor import YakabooBookProcessor
 class Yakaboo(BaseShop, FetchPageMixin):
     async def get_book(self, query: str) -> list:
         if not query.strip():
-            logging.warning("Empty query provided for Yakaboo.")
             return []
 
         parser = YakabooBookParser(self.baseurl)
@@ -21,7 +20,7 @@ class Yakaboo(BaseShop, FetchPageMixin):
                 logging.error("Failed to fetch Yakaboo HTML content.")
                 return []
 
-            books = parser.parse_books_from_html(html_content)
+            books = await parser.parse_books_from_html(html_content)
             if not books:
                 logging.warning(f"No books found for query '{query}' on Yakaboo.")
                 return []

@@ -23,7 +23,7 @@ class ReadeatBookParser:
         logging.info(f"Fetching books from URL: {search_url}")
         return await fetch_page(search_url)
 
-    def parse_books_from_html(self, html: str) -> List[dict]:
+    async def parse_books_from_html(self, html: str) -> List[dict]:
         soup = BeautifulSoup(html, features="html.parser")
         books_elements = soup.select(self.settings["book_container"])
         logging.info(f"Found {len(books_elements)} books on the page.")

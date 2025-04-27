@@ -9,7 +9,7 @@ from bot.utils.book_filters import (
 )
 
 
-class ZhupanskyProcessor:
+class SensBookProcessor:
     @staticmethod
     async def add_details_to_books(books: list) -> list:
         processed_books = []
@@ -17,9 +17,7 @@ class ZhupanskyProcessor:
 
         for book in books:
             try:
-                book_details = await get_book_details(
-                    book, source_type="zhupansky_publisher"
-                )
+                book_details = await get_book_details(book, source_type="sens")
                 if book_details and book_details["title"] not in seen_titles:
                     processed_books.append(book_details)
                     seen_titles.add(book_details["title"])
@@ -27,6 +25,7 @@ class ZhupanskyProcessor:
                     logging.warning(f"Skipping duplicate or incomplete book: {book}")
             except Exception as e:
                 logging.error(f"Error processing book details: {e}")
+
         return processed_books
 
     @staticmethod
