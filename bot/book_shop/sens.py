@@ -2,7 +2,7 @@ import logging
 
 from bot.base.base_shop import BaseShop
 from bot.parser.sens_parser import SensBookParser
-from bot.services.sens_processor import SensBookProcessor
+from bot.processor.sens_processor import SensBookProcessor
 
 
 class Sens(BaseShop):

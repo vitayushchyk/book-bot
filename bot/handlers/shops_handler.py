@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 from telegram.helpers import escape_markdown
 
-from bot.services.search_manager import BookSearchManager
+from bot.processor.search_manager import BookSearchManager
 
 NAME_BOOK = range(1)
 MAX_MESSAGE_LENGTH = 4000

@@ -25,7 +25,7 @@ from bot.handlers.shops_handler import (
     start_search_book_handler,
 )
 from bot.handlers.start_handler import start
-from bot.services.search_manager import BookSearchManager
+from bot.processor.search_manager import BookSearchManager
 
 driver = get_driver()
 logging.basicConfig()
@@ -38,16 +38,21 @@ def get_app():
         yakaboo = Yakaboo(driver, settings.search_url_yakaboo)
         sens = Sens(driver, settings.search_url_sens)
         readeat = Readeat(driver, settings.search_url_readeat)
-        # eknygarnya = EKnygarnya(driver, settings.search_url_eknygarnya)
+        eknygarnya = EKnygarnya(driver, settings.search_url_eknygarnya)
         zhupansky = ZhupanskyPublisher(driver, settings.search_url_zhupansky)
         bookling = Bookling(driver, settings.search_url_bookling)
-        # ksd = KSD(driver, settings.search_url_ksd)
+        ksd = KSD(driver, settings.search_url_ksd)
         vivat = Vivat(driver, settings.search_url_vivat)
-        # search_manager = BookSearchManager(
-        #     [yakaboo, sens, readeat, eknygarnya, zhupansky, bookling, ksd, vivat],
-        # )
         search_manager = BookSearchManager(
-            [bookling, readeat, yakaboo, sens],
+            [
+                yakaboo,
+                sens,
+                readeat,
+                eknygarnya,
+                zhupansky,
+                bookling,
+                ksd,
+            ],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
 

@@ -3,8 +3,8 @@ import logging
 from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.base.base_shop import BaseShop
 from bot.core.config import settings
-from bot.parser.readeat_parser import ReadeatBookParser
-from bot.services.readeat_processor import ReadeatBookProcessor
+from bot.parser.readead_parser import ReadeatBookParser
+from bot.processor.readead_processor import ReadeatBookProcessor
 
 
 class Readeat(BaseShop, FetchPageMixin):

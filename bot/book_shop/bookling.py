@@ -3,7 +3,7 @@ import logging
 from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.base.base_shop import BaseShop
 from bot.parser.bookling_parser import BooklingBookParser
-from bot.services.bookling_processor import BookDetailsAdder, BookFilterAndSorter
+from bot.processor.bookling_processor import BookDetailsAdder, BookFilterAndSorter
 
 PARSING_SETTINGS = {
     "bookling": {

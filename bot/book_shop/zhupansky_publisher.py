@@ -3,7 +3,7 @@ import logging
 from bot.base.base_shop import BaseShop
 from bot.core.config import settings
 from bot.parser.zhupansky_parser import ZhupanskyParser
-from bot.services.zhupansky_processor import ZhupanskyProcessor
+from bot.processor.zhupansky_processor import ZhupanskyProcessor
 
 
 class ZhupanskyPublisher(BaseShop):
