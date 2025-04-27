@@ -10,15 +10,20 @@ from bot.utils.book_details import get_book_details
 class Vivat(BaseShop):
     async def get_book(self, book_name):
         try:
-
             search_url = f"{self.baseurl}{book_name}"
             response = requests.get(search_url)
             response.raise_for_status()
 
             data = response.json()
             logging.info("Data successfully fetched.")
+            logging.debug(f"Response JSON: {data}")
 
-            item_groups = data.get("results", {}).get("item_groups", [])
+            results = data.get("results", {})
+            if not isinstance(results, dict):
+                logging.error("Unexpected format for 'results'. Expected a dictionary.")
+                return []
+
+            item_groups = results.get("item_groups", [])
             book_data = None
             for group in item_groups:
                 for item in group.get("items", []):

@@ -3,7 +3,6 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 
-from bot.base.base_mixin import FetchBooksMixin
 from bot.base.base_shop import BaseShop
 from bot.utils.book_details import get_book_details
 from bot.utils.book_filters import (

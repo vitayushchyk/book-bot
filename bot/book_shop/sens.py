@@ -1,38 +1,34 @@
 import logging
 
 from bot.base.base_shop import BaseShop
-from bot.utils.book_details import get_book_details
+from bot.parser.sens_parser import SensBookParser
+from bot.processor.sens_processor import SensBookProcessor
 
 
 class Sens(BaseShop):
-    async def get_book(self, book_name):
-        search_url_sens = f"{self.baseurl}{book_name}"
-        self.driver.get(search_url_sens)
+    async def get_book(self, query: str) -> list:
+        if not query.strip():
+            logging.warning("Empty query provided for Sens.")
+            return []
+
+        parser = SensBookParser(self.driver, self.baseurl)
 
         try:
-            books_data = self.driver.execute_script("return products;")
+
+            books_data = await parser.fetch_books_data(query)
             if not books_data:
-                logging.warning("No books found in the 'products' array.")
+                logging.warning("No books were fetched from Sens.")
                 return []
 
-            normalized_query = " ".join(book_name.lower().strip().split())
-            matching_books = []
+            processor = SensBookProcessor()
+            detailed_books = await processor.add_details_to_books(books_data)
+            processed_books = await processor.filter_and_sort_books(
+                detailed_books, query
+            )
 
-            for book in books_data:
-                book_details = await get_book_details(book, source_type="sens")
-                if book_details:
-                    normalized_title = " ".join(
-                        book_details["title"].lower().strip().split()
-                    )
-                    if normalized_query in normalized_title:
-                        matching_books.append(book_details)
-
-            if not matching_books:
-                logging.info(
-                    f"Found {len(matching_books)} matching books for query: '{book_name}'."
-                )
-            return matching_books
+            logging.info(f"Successfully fetched {len(processed_books)} books.")
+            return processed_books
 
         except Exception as e:
-            logging.error(f"Error occurred while searching for books: {e}")
+            logging.error(f"An error occurred in Sens: {e}")
             return []

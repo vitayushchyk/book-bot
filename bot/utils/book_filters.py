@@ -1,32 +1,63 @@
+import re
 from difflib import SequenceMatcher
 
 
-async def filter_books_by_exact_match(books, search_query):
+async def _normalize_title_text(text):
+    return re.sub(r"[^\w\s]", "", text).lower()
 
+
+async def filter_books_by_exact_match(books, search_query):
+    normalized_query = await _normalize_title_text(search_query)
     filtered_books = [
-        book for book in books if search_query.lower() in book["title"].lower()
+        book
+        for book in books
+        if normalized_query in await _normalize_title_text(book["title"])
     ]
     return filtered_books
 
 
 async def is_similar(title, query):
-
-    similarity = SequenceMatcher(None, title.lower(), query.lower()).ratio()
+    normalized_title = await _normalize_title_text(title)
+    normalized_query = await _normalize_title_text(query)
+    similarity = SequenceMatcher(None, normalized_title, normalized_query).ratio()
     return similarity > 0.7
 
 
 async def filter_books_by_similarity(books, search_query):
-
-    filtered_books = [book for book in books if is_similar(book["title"], search_query)]
+    filtered_books = [
+        book for book in books if await is_similar(book["title"], search_query)
+    ]
     return filtered_books
 
 
 async def sort_books_by_relevance(books, search_query):
+    normalized_query = await _normalize_title_text(search_query)
 
-    return sorted(
-        books,
+    books_with_normalized_titles = [
+        {**book, "normalized_title": await _normalize_title_text(book["title"])}
+        for book in books
+    ]
+    result = sorted(
+        books_with_normalized_titles,
         key=lambda book: SequenceMatcher(
-            None, book["title"].lower(), search_query.lower()
+            None,
+            book["normalized_title"],
+            normalized_query,
         ).ratio(),
         reverse=True,
     )
+    return result
+
+
+async def _normalize_price(price):
+    clean_price = price.replace(" ", "").replace(",", ".")
+    clean_price = "".join(char for char in clean_price if char.isdigit() or char == ".")
+    return float(clean_price)
+
+
+async def sort_books_by_price(books):
+    books_with_prices = [
+        {**book, "normalized_price": await _normalize_price(book["price"])}
+        for book in books
+    ]
+    return sorted(books_with_prices, key=lambda book: book["normalized_price"])

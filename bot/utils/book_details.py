@@ -18,8 +18,10 @@ async def get_book_details(book, source_type):
         else:
             raise ValueError(f"Unsupported source type: {source_type}")
 
-        if isinstance(price, str) and price.isdigit():
-            price = f"{price} грн"
+        if isinstance(price, str):
+            price = price.replace(" ", "")
+            if price.isdigit():
+                price = f"{price} грн"
         elif isinstance(price, (int, float)):
             price = f"{int(price)} грн"
 

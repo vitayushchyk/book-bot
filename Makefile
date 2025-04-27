@@ -17,6 +17,9 @@ help: ## Display help message
 run_app:  ## Run application
 	docker compose up -d
 
+run_and_build_app:  ## Run & build application
+	docker compose up -d --build
+
 drop_all_containers: ## Drop all containers
 	docker compose down -v --remove-orphans
 
