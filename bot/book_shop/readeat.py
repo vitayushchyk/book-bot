@@ -28,7 +28,9 @@ class Readeat(BaseShop, FetchPageMixin):
 
             processor = ReadeatBookProcessor()
             detailed_books = await processor.add_details_to_books(books)
-            processed_books = await processor.filter_and_sort(detailed_books, query)
+            processed_books = await processor.filter_and_sort_books(
+                detailed_books, query
+            )
 
             return processed_books
 

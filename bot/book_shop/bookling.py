@@ -3,7 +3,7 @@ import logging
 from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.base.base_shop import BaseShop
 from bot.parser.bookling_parser import BooklingBookParser
-from bot.processor.bookling_processor import BookDetailsAdder, BookFilterAndSorter
+from bot.processor.bookling_processor import BooklingProcessor
 
 PARSING_SETTINGS = {
     "bookling": {
@@ -21,19 +21,17 @@ class Bookling(BaseShop, FetchPageMixin):
             logging.warning("Empty query provided!")
             return []
 
-        fetcher = BooklingBookParser(self.baseurl, PARSING_SETTINGS["bookling"])
-        html_content = await fetcher.fetch_books_html(self.fetch_page, query)
+        bookling_parser = BooklingBookParser(self.baseurl, PARSING_SETTINGS["bookling"])
+        html_content = await bookling_parser.fetch_books_html(self.fetch_page, query)
+
         if not html_content:
             logging.error(f"Failed to fetch books for query: {query}")
             return []
-        books = await fetcher.parse_books_from_html(html_content)
 
-        details_adder = BookDetailsAdder()
-        detailed_books = await details_adder.add_details_to_books(books)
+        raw_books = await bookling_parser.parse_books_from_html(html_content)
 
-        filter_and_sorter = BookFilterAndSorter()
-        processed_books = await filter_and_sorter.filter_and_sort_books(
-            detailed_books, query
-        )
+        processor = BooklingProcessor()
+        detailed_books = await processor.add_details_to_books(raw_books)
+        processed_books = await processor.filter_and_sort_books(detailed_books, query)
 
         return processed_books
