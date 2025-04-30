@@ -9,12 +9,14 @@ from telegram.ext import (
 )
 
 from bot.book_shop.bookling import Bookling
-from bot.book_shop.e_knygarnya import EKnygarnya
-from bot.book_shop.ksd import KSD
+
+# from bot.book_shop.e_knygarnya import EKnygarnya
+# from bot.book_shop.ksd import KSD
 from bot.book_shop.readeat import Readeat
 from bot.book_shop.sens import Sens
-from bot.book_shop.vivat import Vivat
-from bot.book_shop.yakaboo import Yakaboo
+
+# from bot.book_shop.vivat import Vivat
+# from bot.book_shop.yakaboo import Yakaboo
 from bot.book_shop.zhupansky_publisher import ZhupanskyPublisher
 from bot.core.config import settings
 from bot.driver.chrome_driver import get_driver
@@ -35,23 +37,20 @@ logging.getLogger().setLevel(settings.get_log_level())
 def get_app():
     logging.info("Initializing the bot...")
     try:
-        yakaboo = Yakaboo(driver, settings.search_url_yakaboo)
+        # yakaboo = Yakaboo(driver, settings.search_url_yakaboo)
         sens = Sens(driver, settings.search_url_sens)
         readeat = Readeat(driver, settings.search_url_readeat)
-        eknygarnya = EKnygarnya(driver, settings.search_url_eknygarnya)
+        # eknygarnya = EKnygarnya(driver, settings.search_url_eknygarnya)
         zhupansky = ZhupanskyPublisher(driver, settings.search_url_zhupansky)
         bookling = Bookling(driver, settings.search_url_bookling)
-        ksd = KSD(driver, settings.search_url_ksd)
-        vivat = Vivat(driver, settings.search_url_vivat)
+        # ksd = KSD(driver, settings.search_url_ksd)
+        # vivat = Vivat(driver, settings.search_url_vivat)
         search_manager = BookSearchManager(
             [
-                yakaboo,
-                sens,
-                readeat,
-                eknygarnya,
-                zhupansky,
                 bookling,
-                ksd,
+                readeat,
+                sens,
+                zhupansky,
             ],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()

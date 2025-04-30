@@ -19,6 +19,7 @@ class ZhupanskyPublisher(BaseShop):
         parser = ZhupanskyParser(baseurl=settings.search_url_zhupansky, headers=headers)
 
         try:
+
             raw_books = parser.fetch_books_html(query)
             if not raw_books:
                 logging.warning(f"No books were found for query: '{query}'.")

@@ -11,7 +11,7 @@ class BookSearchManager:
         self,
         shops: List[BaseShop],
         max_concurrent_requests: int = 10,
-        timeout: int = 10,
+        timeout: int = 20,
     ):
         self.shops = shops
         self.cache = CacheManager()

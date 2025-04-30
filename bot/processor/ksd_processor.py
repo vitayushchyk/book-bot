@@ -3,7 +3,12 @@ from bot.processor.base_processor import BaseProcessor
 # TODO: Використати, коли дороблю парсери по магазину
 
 
-class SensBookProcessor(BaseProcessor):
+class KSDProcessor(BaseProcessor):
+
+    @property
+    def title_key(self):
+        return "name"
+
     @property
     def shop_name(self):
-        return "Sens"
+        return "KSD"
