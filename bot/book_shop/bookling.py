@@ -16,7 +16,7 @@ PARSING_SETTINGS = {
 
 
 class Bookling(BaseShop, FetchPageMixin):
-    async def get_book(self, query: str):
+    async def get_book(self, query: str) -> list:
         if not query.strip():
             logging.warning("Empty query provided!")
             return []

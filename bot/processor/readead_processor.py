@@ -2,5 +2,7 @@ from bot.processor.base_processor import BaseProcessor
 
 
 class ReadeatBookProcessor(BaseProcessor):
-    def __init__(self):
-        super().__init__(source_type="readeat")
+
+    @property
+    def shop_name(self):
+        return "Readeat"

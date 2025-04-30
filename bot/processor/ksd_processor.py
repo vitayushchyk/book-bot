@@ -4,5 +4,11 @@ from bot.processor.base_processor import BaseProcessor
 
 
 class KSDProcessor(BaseProcessor):
-    def __init__(self):
-        super().__init__(source_type="ksd")
+
+    @property
+    def title_key(self):
+        return "name"
+
+    @property
+    def shop_name(self):
+        return "KSD"
