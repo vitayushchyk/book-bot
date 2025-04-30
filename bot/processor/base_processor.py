@@ -28,7 +28,7 @@ class BaseProcessor(ABC):
     @abstractmethod
     def shop_name(self): ...
 
-    def prepare_book_details(self, book: dict) -> dict[str, str | Any] | None:
+    async def prepare_book_details(self, book: dict) -> dict[str, str | Any] | None:
         try:
             title = book.get(self.title_key, "Title not available")
             price = book.get(self.price_key, "Price not available")
@@ -58,7 +58,7 @@ class BaseProcessor(ABC):
 
         async def process_book(book):
             try:
-                book_details = self.prepare_book_details(book)
+                book_details = await self.prepare_book_details(book)
 
                 if book_details and book_details["title"] not in unique_titles:
                     unique_titles.add(book_details["title"])
