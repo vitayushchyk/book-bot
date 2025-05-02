@@ -47,7 +47,7 @@ def get_app():
         # ksd = KSD(driver, settings.search_url_ksd)
         # vivat = Vivat(driver, settings.search_url_vivat)
         search_manager = BookSearchManager(
-            [yakaboo, readeat, bookling, zhupansky],
+            [yakaboo, sens, readeat, zhupansky, bookling],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
 

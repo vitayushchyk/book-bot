@@ -11,10 +11,9 @@ class Sens(BaseShop):
             logging.warning("Empty query provided for Sens.")
             return []
 
-        parser = SensBookParser(self.driver, self.baseurl)
+        parser = SensBookParser(self.baseurl)
 
         try:
-
             books_data = await parser.fetch_books_data(query)
             if not books_data:
                 logging.warning("No books were fetched from Sens.")
