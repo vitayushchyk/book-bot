@@ -1,37 +1,34 @@
 import logging
 
-from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.base.base_shop import BaseShop
-from bot.parser.bookling_parser import BooklingBookParser
+from bot.parser.bookling_parser import BooklingParser
 from bot.processor.bookling_processor import BooklingProcessor
 
-PARSING_SETTINGS = {
-    "bookling": {
-        "book_container": ".item_info.TYPE_1",
-        "title": ".item-title a span",
-        "price": ".price .price_value",
-        "url": ".item-title a",
-    }
-}
 
-
-class Bookling(BaseShop, FetchPageMixin):
-    async def get_book(self, query: str) -> list:
-        if not query.strip():
-            logging.warning("Empty query provided!")
+class Bookling(BaseShop):
+    async def get_book(self, book_name: str) -> list:
+        if not book_name.strip():
+            logging.warning("Empty book name provided for Yakaboo.")
             return []
 
-        bookling_parser = BooklingBookParser(self.baseurl, PARSING_SETTINGS["bookling"])
-        html_content = await bookling_parser.fetch_books_html(self.fetch_page, query)
+        parser = BooklingParser(self.baseurl)
 
-        if not html_content:
-            logging.error(f"Failed to fetch books for query: {query}")
+        try:
+
+            raw_books = await parser.fetch_books_data(book_name)
+            if not raw_books:
+                logging.warning("No books fetched from Yakaboo.")
+                return []
+
+            processor = BooklingProcessor()
+            detailed_books = await processor.add_details_to_books(raw_books)
+            final_books = await processor.filter_and_sort_books(
+                detailed_books, book_name
+            )
+
+            logging.info(f"Successfully fetched {len(final_books)} books from Yakaboo.")
+            return final_books
+
+        except Exception as e:
+            logging.error(f"An error occurred in Yakaboo: {e}")
             return []
-
-        raw_books = await bookling_parser.parse_books_from_html(html_content)
-
-        processor = BooklingProcessor()
-        detailed_books = await processor.add_details_to_books(raw_books)
-        processed_books = await processor.filter_and_sort_books(detailed_books, query)
-
-        return processed_books
