@@ -35,9 +35,11 @@ class BaseProcessor(ABC):
             link = book.get(self.link_key, "#")
 
             if isinstance(price, str):
-                price = price.replace(" ", "")
+                price = price.replace(" ", "").strip()
                 if price.isdigit():
                     price = f"{price} грн"
+                else:
+                    price = price.replace("грн", " грн").strip()
             elif isinstance(price, (int, float)):
                 price = f"{int(price)} грн"
 

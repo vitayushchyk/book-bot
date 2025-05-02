@@ -12,7 +12,7 @@ class FetchPageMixin(BaseHTTPClientMixin):
                 async with session.get(url, timeout=timeout) as response:
                     if response.status == 200:
                         return await response.text()
-                    logging.error(f"Failed to fetch URL {url}: {response.status}")
+                    logging.error(f"Failed to fetch URL {url}: {response.status} ")
             except Exception as e:
                 logging.error(f"Request error: {e}")
         return None
