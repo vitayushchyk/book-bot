@@ -3,52 +3,56 @@ from typing import List
 
 from bs4 import BeautifulSoup
 
-PARSING_SETTINGS = {
-    "readeat": {
-        "book_container": "div.fn_product.card.product-card",
-        "title": {"key": "data-name"},
-        "price": {"key": "data-price"},
-        "url": "a.d-block",
-    }
-}
+from bot.base.base_fetch_page_mixin import FetchPageMixin
+from bot.parser.base_parser import BaseParser
 
 
-class ReadeatBookParser:
-    def __init__(self, baseurl: str):
-        self.baseurl = baseurl
-        self.settings = PARSING_SETTINGS["readeat"]
+class ReadeatParser(FetchPageMixin, BaseParser):
+    def __init__(self, base_url):
+        self.base_url = base_url
 
-    async def fetch_books_html(self, fetch_page, query: str) -> str:
-        search_url = f"{self.baseurl}{query.strip()}"
-        logging.info(f"Fetching books from URL: {search_url}")
-        return await fetch_page(search_url)
+    BOOK_CONTAINER = "div.fn_product.card.product-card"
+    TITLE_ATTRIBUTE = "data-name"
+    PRICE_ATTRIBUTE = "data-price"
+    URL_SELECTOR = "a.d-block"
+    URL_ATTRIBUTE = "href"
 
-    async def parse_books_from_html(self, html: str) -> List[dict]:
-        soup = BeautifulSoup(html, features="html.parser")
-        books_elements = soup.select(self.settings["book_container"])
-        logging.info(f"Found {len(books_elements)} books on the page.")
+    async def fetch_books_data(self, query: str) -> List[dict]:
+        search_url = f"{self.base_url}{query.strip()}"
+        logging.info(f"Fetching data from URL: {search_url} in Readeat.")
 
-        results = []
-        for index, book_element in enumerate(books_elements, start=1):
+        html_text = await self.fetch_page(search_url)
+        if not html_text:
+            return []
+
+        soup = BeautifulSoup(html_text, features="html.parser")
+        books = await self._parse_books(soup)
+        logging.info(
+            f"Successfully fetched {len(books)} books in Readeat from URL: {search_url}."
+        )
+        return books
+
+    async def _parse_books(self, soup: BeautifulSoup) -> List[dict]:
+        books = []
+
+        for book in soup.select(self.BOOK_CONTAINER):
             try:
-                title = book_element.get(
-                    self.settings["title"]["key"], "Title not available"
-                ).strip()
-                price = f"{book_element.get(self.settings['price']['key'], 'Price not available')} грн"
-                url = (
-                    book_element.select_one(self.settings["url"])["href"]
-                    if book_element.select_one(self.settings["url"])
-                    else "URL not available"
+
+                title = book.get(self.TITLE_ATTRIBUTE)
+
+                price = book.get(self.PRICE_ATTRIBUTE)
+
+                url = await self._extract_attribute(
+                    element=book,
+                    selector=self.URL_SELECTOR,
+                    attribute=self.URL_ATTRIBUTE,
+                    base_url=self.base_url,
                 )
 
-                if not title or not price or not url:
-                    logging.warning(f"Skipping book with missing data: {index}")
-                    continue
+                books.append({"title": title, "price": price, "url": url})
 
-                results.append({"title": title, "price": price, "url": url})
-                logging.info(f"Book parsed: {title} ({price}) - {url}")
+            except AttributeError:
+                logging.warning("Skipped a card due to missing data in Readeat.")
+                continue
 
-            except Exception as e:
-                logging.error(f"Error parsing book {index}: {e}")
-
-        return results
+        return books

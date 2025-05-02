@@ -1,26 +1,21 @@
 import logging
 
-from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.base.base_shop import BaseShop
 from bot.core.config import settings
-from bot.parser.readead_parser import ReadeatBookParser
+from bot.parser.readead_parser import ReadeatParser
 from bot.processor.readead_processor import ReadeatBookProcessor
 
 
-class Readeat(BaseShop, FetchPageMixin):
+class Readeat(BaseShop):
     async def get_book(self, query: str):
         if not query.strip():
             logging.warning("Empty query provided!")
             return []
-
-        parser = ReadeatBookParser(baseurl=settings.search_url_readeat)
+        parser = ReadeatParser(base_url=settings.search_url_readeat)
 
         try:
-            html_content = await parser.fetch_books_html(self.fetch_page, query)
-            if not html_content:
-                logging.error("Failed to fetch books HTML content.")
-                return []
-            books = await parser.parse_books_from_html(html_content)
+
+            books = await parser.fetch_books_data(query)
 
             if not books:
                 logging.warning("No books found after parsing.")
