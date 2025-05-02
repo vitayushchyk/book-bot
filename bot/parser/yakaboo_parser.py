@@ -1,12 +1,13 @@
 import logging
-from typing import Any
+from typing import List
 
 from bs4 import BeautifulSoup
 
 from bot.base.base_fetch_page_mixin import FetchPageMixin
+from bot.parser.base_parser import BaseParser
 
 
-class YakabooParser(FetchPageMixin):
+class YakabooParser(FetchPageMixin, BaseParser):
     def __init__(self, base_url):
         self.base_url = base_url
 
@@ -17,57 +18,48 @@ class YakabooParser(FetchPageMixin):
     URL_SELECTOR = "a.category-card__image"
     URL_ATTRIBUTE = "href"
 
-    async def fetch_books_data(self, query: str) -> list:
-        search_url = f"{self.base_url}/search?q={query.strip()}"
-        response_text = await self.fetch_page(search_url)
+    async def fetch_books_data(self, query: str) -> List[dict]:
+        search_url = f"{self.base_url}{query.strip()}"
+        logging.info(f"Fetching data from URL: {search_url} in Yakaboo.")
 
-        if not response_text:
+        html_text = await self.fetch_page(search_url)
+        if not html_text:
             return []
 
-        soup = BeautifulSoup(response_text, features="html.parser")
-        book_elements = soup.select(self.BOOK_CONTAINER)
-
-        if not book_elements:
-            logging.warning(f"No books found for query: '{query}' in Yakaboo.")
-            return []
-
-        books = []
-        for book in book_elements:
-            try:
-                title = await self._get_text_by_selector(book, self.TITLE_SELECTOR)
-                price = await self._get_special_or_default_price(book)
-                url = await self._get_attribute_by_selector(
-                    book, self.URL_SELECTOR, self.URL_ATTRIBUTE, base_url=self.base_url
-                )
-
-                if title and url:
-                    books.append({"title": title, "price": price, "url": url})
-            except Exception as e:
-                logging.error(f"Error extracting book data: {e}")
-
+        soup = BeautifulSoup(html_text, features="html.parser")
+        books = await self._parse_books(soup)
+        logging.info(
+            f"Successfully fetched {len(books)} books in Yakaboo from URL: {search_url}."
+        )
         return books
 
-    async def _get_text_by_selector(self, element, selector: str) -> str | None:
-        tag = element.select_one(selector)
-        return tag.text.strip() if tag else None
+    async def _parse_books(self, soup: BeautifulSoup) -> list:
+        books = []
 
-    async def _get_special_or_default_price(self, element) -> str | None:
-        prices = element.select(self.PRICE_SELECTOR)
+        for book in soup.select(self.BOOK_CONTAINER):
+            try:
 
-        if not prices:
-            return None
+                title = await self._extract_text(
+                    element=book, selector=self.TITLE_SELECTOR
+                )
 
-        for price in prices:
-            special_price = price.select_one(self.SPECIAL_PRICE_SELECTOR)
-            if special_price:
-                return special_price.text.strip()
+                price = await self._extract_text(
+                    element=book, selector=self.SPECIAL_PRICE_SELECTOR
+                ) or await self._extract_text(
+                    element=book, selector=self.PRICE_SELECTOR
+                )
 
-        return prices[0].text.strip() if prices else None
+                url = await self._extract_attribute(
+                    element=book,
+                    selector=self.URL_SELECTOR,
+                    attribute=self.URL_ATTRIBUTE,
+                    base_url=self.base_url,
+                )
 
-    async def _get_attribute_by_selector(
-        self, element, selector: str, attribute: str, base_url: str = ""
-    ) -> str | None | Any:
-        tag = element.select_one(selector)
-        if tag and attribute in tag.attrs:
-            return f"{base_url}{tag[attribute]}" if base_url else tag[attribute]
-        return None
+                books.append({"title": title, "price": price, "url": url})
+
+            except AttributeError:
+                logging.warning("Skipped a card due to missing data in Yakaboo.")
+                continue
+
+        return books

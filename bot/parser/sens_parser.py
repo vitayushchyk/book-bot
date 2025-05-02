@@ -1,25 +1,71 @@
 import logging
 from typing import List
 
+from bs4 import BeautifulSoup
 
-class SensBookParser:
-    def __init__(self, driver, baseurl: str):
-        self.driver = driver
-        self.baseurl = baseurl
+from bot.base.base_fetch_page_mixin import FetchPageMixin
+from bot.parser.base_parser import BaseParser
+
+
+class SensBookParser(BaseParser, FetchPageMixin):
+    def __init__(self, base_url):
+        self.base_url = base_url
+
+    BOOK_CONTAINER = "div.catalogCard-main"
+    TITLE_PARENT_TAG = "div"
+    TITLE_PARENT_CLASS = "catalogCard-title"
+    TITLE_CHILD_TAG = "a"
+    PRICE_PARENT_TAG = "div"
+    PRICE_PARENT_CLASS = "catalogCard-price"
+    LINK_TAG = "a"
+    LINK_ATTRIBUTE = "href"
+    LINK_PARENT_CLASS = "catalogCard-title"
 
     async def fetch_books_data(self, query: str) -> List[dict]:
-        search_url = f"{self.baseurl}{query.strip()}"
-        logging.info(f"Navigating to search URL: {search_url}")
-        self.driver.get(search_url)
+        search_url = f"{self.base_url}{query.strip()}"
+        logging.info(f"Fetching data from URL: {search_url} in Sens.")
 
-        try:
-            books_data = self.driver.execute_script("return products;")
-            if not books_data:
-                logging.warning("No books found in the 'products' array.")
-                return []
-            logging.info(f"Found {len(books_data)} books in the 'products' array.")
-            return books_data
-
-        except Exception as e:
-            logging.error(f"Error fetching book data: {e}")
+        html_text = await self.fetch_page(search_url)
+        if not html_text:
             return []
+
+        soup = BeautifulSoup(html_text, features="html.parser")
+        books = await self._parse_books(soup)
+        logging.info(
+            f"Successfully fetched {len(books)} books in Sens from URL: {search_url}."
+        )
+        return books
+
+    async def _parse_books(self, soup: BeautifulSoup) -> List[dict]:
+        books = []
+
+        for card in soup.select(self.BOOK_CONTAINER):
+            try:
+                title = await self._extract_text(
+                    card,
+                    parent_tag=self.TITLE_PARENT_TAG,
+                    parent_class=self.TITLE_PARENT_CLASS,
+                    child_tag=self.TITLE_CHILD_TAG,
+                )
+
+                price = await self._extract_text(
+                    card,
+                    parent_tag=self.PRICE_PARENT_TAG,
+                    parent_class=self.PRICE_PARENT_CLASS,
+                )
+
+                link = await self._extract_attribute(
+                    card,
+                    tag=self.LINK_TAG,
+                    attribute=self.LINK_ATTRIBUTE,
+                    parent_class=self.LINK_PARENT_CLASS,
+                    base_url=self.base_url,
+                )
+
+                books.append({"title": title, "price": price, "url": link})
+
+            except AttributeError:
+                logging.warning("Skipped a card due to missing data in Sens.")
+                continue
+
+        return books
