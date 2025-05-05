@@ -23,7 +23,7 @@ class SensBookParser(BaseParser, FetchPageMixin):
 
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.base_url}{query.strip()}"
-        logging.info(f"Fetching data from URL: {search_url} in Sens.")
+        logging.info(f"[Sens Parser] Fetching data from URL: {search_url}.")
 
         html_text = await self.fetch_page(search_url)
         if not html_text:
@@ -32,7 +32,7 @@ class SensBookParser(BaseParser, FetchPageMixin):
         soup = BeautifulSoup(html_text, features="html.parser")
         books = await self._parse_books(soup)
         logging.info(
-            f"Successfully fetched {len(books)} books in Sens from URL: {search_url}."
+            f"[Sens Parser] Successfully fetched {len(books)} books from URL: {search_url}."
         )
         return books
 
@@ -65,7 +65,7 @@ class SensBookParser(BaseParser, FetchPageMixin):
                 books.append({"title": title, "price": price, "url": link})
 
             except AttributeError:
-                logging.warning("Skipped a card due to missing data in Sens.")
+                logging.warning("[Sens Parser] Skipped a card due to missing data.")
                 continue
 
         return books

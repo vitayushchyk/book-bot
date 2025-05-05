@@ -67,7 +67,7 @@ class BaseProcessor(ABC):
                     return book_details
                 else:
                     logging.warning(
-                        f"Skipping duplicate or incomplete book: {book} from {self.shop_name.upper()}"
+                        f"Skipping duplicate or incomplete book: {len(books)} from {self.shop_name.upper()}"
                     )
             except Exception as e:
                 logging.error(

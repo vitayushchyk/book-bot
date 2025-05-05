@@ -20,7 +20,7 @@ class BooklingParser(FetchPageMixin, BaseParser):
     async def fetch_books_data(self, query: str) -> List[dict]:
 
         search_url = f"{self.base_url}{query.strip()}"
-        logging.info(f"Fetching data from URL: {search_url} in Bookling.")
+        logging.info(f"[Bookling Parser] Fetching data from URL: {search_url}.")
 
         html_text = await self.fetch_page(search_url)
         if not html_text:
@@ -30,7 +30,7 @@ class BooklingParser(FetchPageMixin, BaseParser):
         books = await self._parse_books(soup)
 
         logging.info(
-            f"Successfully fetched {len(books)} books in Bookling from URL: {search_url}."
+            f"[Bookling Parser] Successfully fetched {len(books)} books from URL: {search_url}."
         )
         return books
 
@@ -58,7 +58,7 @@ class BooklingParser(FetchPageMixin, BaseParser):
                 books.append({"title": title, "price": price, "url": url})
 
             except AttributeError:
-                logging.warning("Skipped a card due to missing data in Bookling.")
+                logging.warning("[Bookling Parser] Skipped a card due to missing data.")
                 continue
 
         return books

@@ -8,33 +8,35 @@ from bot.processor.vivat_processor import VivatProcessor
 class Vivat(BaseShop):
     async def get_book(self, query: str) -> list:
         if not query.strip():
-            logging.warning("Empty query provided for Vivat.")
+            logging.warning("[Vivat Store] Empty query provided.")
             return []
 
         parser = VivatParser(base_url=self.baseurl)
 
         try:
-
-            logging.info(f"Starting to parse books with query: {query.strip()}")
-            detailed_books = await parser._parse_books(query)
-            logging.info(f"Books fetched by parser: {detailed_books}")
+            detailed_books = await parser.parse_books(query)
 
             if not detailed_books:
-                logging.warning("No books were fetched from Vivat.")
+                logging.warning("[Vivat Store] No books were fetched")
                 return []
 
             processor = VivatProcessor()
-            logging.info("Passing books to processor for additional details.")
             detailed_books = await processor.add_details_to_books(detailed_books)
-            logging.info(f"Books after adding details: {detailed_books}")
+            logging.info(
+                f"[Vivat Store] Books after adding details: {len(detailed_books)}"
+            )
 
-            logging.info(f"Filtering and sorting books: {detailed_books}")
+            logging.info(
+                f"[Vivat Store] Filtering and sorting books: {len(detailed_books)}"
+            )
             processed_books = await processor.filter_and_sort_books(
                 detailed_books, query
             )
-            logging.info(f"Successfully fetched {len(processed_books)} books.")
+            logging.info(
+                f"[Vivat Store] Successfully fetched {len(processed_books)} books for query '{query}'."
+            )
             return processed_books
 
         except Exception as e:
-            logging.error(f"An error occurred in Vivat: {e}")
+            logging.error(f"[Vivat Store] An error occurred: {e}")
             return []

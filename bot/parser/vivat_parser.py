@@ -97,7 +97,7 @@ class VivatParser(BaseParser):
             "price": price.get("content") if price else "Price not found",
         }
 
-    async def _parse_books(self, query: str) -> List[dict]:
+    async def parse_books(self, query: str) -> List[dict]:
         books = await self.fetch_books_data(query)
         results = []
 
