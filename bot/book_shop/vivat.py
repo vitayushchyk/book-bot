@@ -1,75 +1,40 @@
-# import logging
-#
-# import requests
-# from bs4 import BeautifulSoup
-#
-# from bot.base.base_shop import BaseShop
-# from bot.utils.book_details import get_book_details
-#
-#
-# class Vivat(BaseShop):
-#     async def get_book(self, book_name):
-#         try:
-#             search_url = f"{self.baseurl}{book_name}"
-#             response = requests.get(search_url)
-#             response.raise_for_status()
-#
-#             data = response.json()
-#             logging.info("Data successfully fetched.")
-#             logging.debug(f"Response JSON: {data}")
-#
-#             results = data.get("results", {})
-#             if not isinstance(results, dict):
-#                 logging.error("Unexpected format for 'results'. Expected a dictionary.")
-#                 return []
-#
-#             item_groups = results.get("item_groups", [])
-#             book_data = None
-#             for group in item_groups:
-#                 for item in group.get("items", []):
-#                     book_data = {
-#                         "url": item.get("url", "#"),
-#                     }
-#                     break
-#                 if book_data:
-#                     break
-#
-#             if not book_data or not book_data.get("url"):
-#                 logging.warning("Book data or URL not found.")
-#                 return []
-#
-#             try:
-#                 book_page_response = requests.get(book_data["url"])
-#                 book_page_response.raise_for_status()
-#
-#                 soup = BeautifulSoup(book_page_response.text, "html.parser")
-#
-#                 title = soup.find("meta", attrs={"property": "og:title"})
-#                 book_data["name"] = title["content"] if title else book_data["name"]
-#
-#                 price_meta = soup.find(
-#                     "meta", attrs={"property": "product:price:amount"}
-#                 )
-#                 if price_meta:
-#                     book_data["price"] = f'{price_meta["content"]} грн'
-#
-#                 canonical_link = soup.find("link", attrs={"rel": "canonical"})
-#                 book_data["url"] = (
-#                     canonical_link["href"] if canonical_link else book_data["url"]
-#                 )
-#
-#             except requests.RequestException as e:
-#                 logging.error(f"Error fetching/parsing book page: {e}")
-#             except Exception as e:
-#                 logging.error(f"Unexpected error while parsing book page: {e}")
-#
-#             formatted_book_data = await get_book_details(book_data, source_type="vivat")
-#             return [formatted_book_data] if formatted_book_data else []
-#
-#         except requests.RequestException as e:
-#             logging.error(f"API request error: {e}")
-#             return []
-#
-#         except Exception as e:
-#             logging.error(f"Unexpected error while fetching books: {e}")
-#             return []
+import logging
+
+from bot.base.base_shop import BaseShop
+from bot.parser.vivat_parser import VivatParser
+from bot.processor.vivat_processor import VivatProcessor
+
+
+class Vivat(BaseShop):
+    async def get_book(self, query: str) -> list:
+        if not query.strip():
+            logging.warning("Empty query provided for Vivat.")
+            return []
+
+        parser = VivatParser(base_url=self.baseurl)
+
+        try:
+
+            logging.info(f"Starting to parse books with query: {query.strip()}")
+            detailed_books = await parser._parse_books(query)
+            logging.info(f"Books fetched by parser: {detailed_books}")
+
+            if not detailed_books:
+                logging.warning("No books were fetched from Vivat.")
+                return []
+
+            processor = VivatProcessor()
+            logging.info("Passing books to processor for additional details.")
+            detailed_books = await processor.add_details_to_books(detailed_books)
+            logging.info(f"Books after adding details: {detailed_books}")
+
+            logging.info(f"Filtering and sorting books: {detailed_books}")
+            processed_books = await processor.filter_and_sort_books(
+                detailed_books, query
+            )
+            logging.info(f"Successfully fetched {len(processed_books)} books.")
+            return processed_books
+
+        except Exception as e:
+            logging.error(f"An error occurred in Vivat: {e}")
+            return []

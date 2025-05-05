@@ -14,6 +14,7 @@ from bot.book_shop.bookling import Bookling
 # from bot.book_shop.ksd import KSD
 from bot.book_shop.readeat import Readeat
 from bot.book_shop.sens import Sens
+from bot.book_shop.vivat import Vivat
 from bot.book_shop.yakaboo import Yakaboo
 
 # from bot.book_shop.vivat import Vivat
@@ -45,9 +46,9 @@ def get_app():
         zhupansky = ZhupanskyPublisher(driver, settings.search_url_zhupansky)
         bookling = Bookling(driver, settings.search_url_bookling)
         # ksd = KSD(driver, settings.search_url_ksd)
-        # vivat = Vivat(driver, settings.search_url_vivat)
+        vivat = Vivat(driver, settings.search_url_vivat)
         search_manager = BookSearchManager(
-            [bookling],
+            [yakaboo, sens, readeat, zhupansky, bookling, vivat],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
 
