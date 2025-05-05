@@ -20,7 +20,7 @@ class YakabooParser(FetchPageMixin, BaseParser):
 
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.base_url}{query.strip()}"
-        logging.info(f"Fetching data from URL: {search_url} in Yakaboo.")
+        logging.info(f"[Yakaboo Parser] Fetching data from URL: {search_url}.")
 
         html_text = await self.fetch_page(search_url)
         if not html_text:
@@ -29,7 +29,7 @@ class YakabooParser(FetchPageMixin, BaseParser):
         soup = BeautifulSoup(html_text, features="html.parser")
         books = await self._parse_books(soup)
         logging.info(
-            f"Successfully fetched {len(books)} books in Yakaboo from URL: {search_url}."
+            f"[Yakaboo Parser] Successfully fetched {len(books)} books from URL: {search_url}."
         )
         return books
 
@@ -59,7 +59,7 @@ class YakabooParser(FetchPageMixin, BaseParser):
                 books.append({"title": title, "price": price, "url": url})
 
             except AttributeError:
-                logging.warning("Skipped a card due to missing data in Yakaboo.")
+                logging.warning("[Yakaboo Parser] Skipped a card due to missing data.")
                 continue
 
         return books

@@ -19,7 +19,7 @@ class ReadeatParser(FetchPageMixin, BaseParser):
 
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.base_url}{query.strip()}"
-        logging.info(f"Fetching data from URL: {search_url} in Readeat.")
+        logging.info(f"[Readeat Parser] Fetching data from URL: {search_url}.")
 
         html_text = await self.fetch_page(search_url)
         if not html_text:
@@ -28,7 +28,7 @@ class ReadeatParser(FetchPageMixin, BaseParser):
         soup = BeautifulSoup(html_text, features="html.parser")
         books = await self._parse_books(soup)
         logging.info(
-            f"Successfully fetched {len(books)} books in Readeat from URL: {search_url}."
+            f"[Readeat Parser] Successfully fetched {len(books)} books from URL: {search_url}."
         )
         return books
 
@@ -52,7 +52,7 @@ class ReadeatParser(FetchPageMixin, BaseParser):
                 books.append({"title": title, "price": price, "url": url})
 
             except AttributeError:
-                logging.warning("Skipped a card due to missing data in Readeat.")
+                logging.warning("[Readeat Parser] Skipped a card due to missing data.")
                 continue
 
         return books
