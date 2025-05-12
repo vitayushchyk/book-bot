@@ -8,8 +8,6 @@ from bot.parser.base_parser import BaseParser
 
 
 class YakabooParser(FetchPageMixin, BaseParser):
-    def __init__(self, base_url):
-        self.base_url = base_url
 
     BOOK_CONTAINER = "div.category-card"
     TITLE_SELECTOR = "a.ui-card-title.category-card__name"

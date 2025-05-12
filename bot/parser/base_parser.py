@@ -3,6 +3,9 @@ from urllib.parse import urljoin
 
 
 class BaseParser:
+    def __init__(self, base_url: str):
+        self.base_url = base_url
+
     @staticmethod
     async def _extract_text(
         element,
@@ -48,3 +51,17 @@ class BaseParser:
 
                 return urljoin(base_url, value) if base_url else value
         return None
+
+    @staticmethod
+    def _add_book(item: dict, books: list):
+        title = item.get("name")
+        price = item.get("price")
+        url = item.get("url")
+        if title:
+            books.append(
+                {
+                    "title": title,
+                    "price": price,
+                    "url": url,
+                }
+            )

@@ -8,8 +8,6 @@ from bot.parser.base_parser import BaseParser
 
 
 class SensBookParser(BaseParser, FetchPageMixin):
-    def __init__(self, base_url):
-        self.base_url = base_url
 
     BOOK_CONTAINER = "div.catalogCard-main"
     TITLE_PARENT_TAG = "div"

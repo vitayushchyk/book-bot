@@ -1,26 +1,25 @@
 import logging
 import traceback
+from typing import Optional
 
-from bot.base.base_client import BaseHTTPClientMixin
+import aiohttp
 
 
-class FetchPageMixin(BaseHTTPClientMixin):
-    async def fetch_page(self, url: str, timeout: int = 20) -> str | None:
-
-        session = await self.get_session()
-        async with session:
-            try:
-
-                async with session.get(url, timeout=timeout) as response:
+class FetchPageMixin:
+    @classmethod
+    async def fetch_page(cls, url: str, timeout: int = 20) -> Optional[str]:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36"
+        }
+        timeout_config = aiohttp.ClientTimeout(total=timeout)
+        try:
+            async with aiohttp.ClientSession(
+                headers=headers, timeout=timeout_config
+            ) as session:
+                async with session.get(url) as response:
                     if response.status == 200:
                         return await response.text()
-                    logging.error(
-                        f"Failed to fetch URL {url}: Status {response.status} "
-                    )
-
-            except Exception as e:
-
-                logging.error(
-                    f"Request error fetching URL {url}: {type(e).__name__} - {e}\n{traceback.format_exc()}"
-                )
+        except Exception as ex:
+            logging.error(f"Error fetching URL {url}: {ex}")
+            traceback.print_exc()
         return None
