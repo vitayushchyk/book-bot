@@ -8,9 +8,6 @@ from bot.parser.base_parser import BaseParser
 
 
 class ReadeatParser(FetchPageMixin, BaseParser):
-    def __init__(self, base_url):
-        self.base_url = base_url
-
     BOOK_CONTAINER = "div.fn_product.card.product-card"
     TITLE_ATTRIBUTE = "data-name"
     PRICE_ATTRIBUTE = "data-price"

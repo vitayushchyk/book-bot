@@ -1,15 +1,12 @@
 import logging
 from typing import List
 
-import requests
+import aiohttp
 
 from bot.parser.base_parser import BaseParser
 
 
 class KSDeKnygarnyaParser(BaseParser):
-    def __init__(self, base_url):
-        self.base_url = base_url
-
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.base_url}{query.strip()}"
         logging.info(
@@ -17,39 +14,38 @@ class KSDeKnygarnyaParser(BaseParser):
         )
 
         books = []
-        response = requests.get(search_url)
 
-        if response.status_code != 200:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(search_url) as response:
+                    if response.status != 200:
+                        logging.error(
+                            f"[KSD and EKnygarnya Parser] Request to URL {search_url} failed with status code {response.status}."
+                        )
+                        return []
+
+                    data = await response.json()
+
+        except aiohttp.ClientError as e:
             logging.error(
-                f"[KSD and EKnygarnya Parser] Request to URL {search_url} failed with status code {response.status_code}."
+                f"[KSD and EKnygarnya Parser] An error occurred while making the request: {e}"
             )
             return []
-
-        data = response.json()
-
-        logging.info(f"API Response: {data}")
 
         item_groups = data.get("results", {}).get("item_groups", [])
 
         for group in item_groups:
             items = group.get("items", [])
-            if not isinstance(items, list):
-                logging.warning("Invalid format for items in group.")
-                continue
-            for item in items:
+            if isinstance(items, list):
+                for item_or_sublist in items:
+                    if isinstance(item_or_sublist, dict):
+                        self._add_book(item_or_sublist, books)
+                    elif isinstance(item_or_sublist, list):
+                        for item in item_or_sublist:
+                            if isinstance(item, dict):
+                                self._add_book(item, books)
 
-                title = item.get("name")
-                if title:
-                    logging.info(f"Book title: {title}")
-                    books.append(
-                        {
-                            "title": title,
-                            "price": item.get("price", "Price not available"),
-                            "url": item.get("url", "#"),
-                        }
-                    )
-                else:
-                    logging.warning(f"Missing title in item: {item}")
-
-        logging.info(f"Parsed {len(books)} raw books from data.")
+        logging.info(
+            f"[KSD and EKnygarnya Parser] Parsed {len(books)} raw books from data."
+        )
         return books

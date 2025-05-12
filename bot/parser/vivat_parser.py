@@ -8,11 +8,6 @@ from bot.parser.base_parser import BaseParser
 
 
 class VivatParser(BaseParser):
-    def __init__(
-        self,
-        base_url,
-    ):
-        self.base_url = base_url
 
     PRICE_SELECTOR = "meta[property='product:price:amount'][content]"
 
