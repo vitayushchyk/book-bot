@@ -8,9 +8,6 @@ from bot.parser.base_parser import BaseParser
 
 
 class BooklingParser(FetchPageMixin, BaseParser):
-    def __init__(self, base_url):
-        self.base_url = base_url
-
     BOOK_CONTAINER = ".item_info.TYPE_1"
     TITLE_SELECTOR = ".item-title a span"
     PRICE_SELECTOR = ".price .price_value"

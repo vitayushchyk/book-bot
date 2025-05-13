@@ -11,6 +11,7 @@ from telegram.ext import (
 from bot.book_shop.bookling import Bookling
 from bot.book_shop.e_knygarnya import EKnygarnya
 from bot.book_shop.ksd import KSD
+from bot.book_shop.old_lion import OldLion
 from bot.book_shop.readeat import Readeat
 from bot.book_shop.sens import Sens
 from bot.book_shop.vivat import Vivat
@@ -43,8 +44,9 @@ def get_app():
         bookling = Bookling(driver, settings.search_url_bookling)
         ksd = KSD(driver, settings.search_url_ksd)
         vivat = Vivat(driver, settings.search_url_vivat)
+        lion = OldLion(driver, settings.search_url_old_lion)
         search_manager = BookSearchManager(
-            [yakaboo, sens, readeat, eknygarnya, zhupansky, bookling, ksd, vivat],
+            [yakaboo, sens, readeat, eknygarnya, zhupansky, bookling, ksd, vivat, lion],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
 

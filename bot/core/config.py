@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     search_url_bookling: str
     search_url_ksd: str
     search_url_vivat: str
+    api_search_url_old_lion: str
+    search_url_old_lion: str
     redis_host: str
     redis_port: int
 
