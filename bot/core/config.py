@@ -1,40 +1,84 @@
 import logging
+from typing import Optional
+from urllib.parse import quote
 
 import colorlog
+from pydantic import PostgresDsn, RedisDsn, SecretStr
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    postgres_db: str
+    postgres_user: SecretStr
+    postgres_password: SecretStr
+
+    db_host: str = "db"
+    echo_query: bool = True  # just for dev
+    db_port: int = 5432
+
+    redis_host: str = "redis"
+    redis_port: int = 6379
+    redis_db: int = 0
+    redis_password: Optional[SecretStr] = None
+
     bot_token: str
+
     search_url_sens: str
-    selenium_url: str
-    selenium_status_url: str
-    search_url_yakaboo: str
-    search_url_readeat: str
     search_url_eknygarnya: str
+    search_url_yakaboo: str
     search_url_zhupansky: str
     search_url_bookling: str
+    search_url_readeat: str
     search_url_ksd: str
     search_url_vivat: str
     api_search_url_old_lion: str
     search_url_old_lion: str
-    redis_host: str
-    redis_port: int
 
     log_level: str = "INFO"
 
     def get_log_level(self) -> int:
-        return {
+        levels = {
             "info": logging.INFO,
             "debug": logging.DEBUG,
             "error": logging.ERROR,
-        }.get(self.log_level.lower(), logging.INFO)
+            "warning": logging.WARNING,
+            "critical": logging.CRITICAL,
+        }
+        return levels.get(self.log_level.lower(), logging.INFO)
 
     class Config:
         env_file = ".env"
+        env_file_encoding = "utf-8"
+
+    @property
+    def db_connection_uri(self) -> PostgresDsn:
+        return PostgresDsn.build(
+            scheme="postgresql+asyncpg",
+            host=self.db_host,
+            port=self.db_port,
+            path=f"{self.postgres_db}",
+            username=self.postgres_user.get_secret_value(),
+            password=quote(self.postgres_password.get_secret_value()),
+        )
+
+    @property
+    def redis_connection_uri(self) -> str:
+        return str(
+            RedisDsn.build(
+                scheme="redis",
+                host=self.redis_host,
+                port=self.redis_port,
+                password=(
+                    self.redis_password.get_secret_value()
+                    if self.redis_password
+                    else None
+                ),
+                path=f"/{self.redis_db}",
+            )
+        )
 
 
-def setup_logging():
+def create_color_formatter() -> logging.Formatter:
     log_colors = {
         "DEBUG": "cyan",
         "INFO": "green",
@@ -42,18 +86,20 @@ def setup_logging():
         "ERROR": "red",
         "CRITICAL": "bold_red",
     }
-
-    formatter = colorlog.ColoredFormatter(
-        "%(log_color)s%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    return colorlog.ColoredFormatter(
+        fmt="%(log_color)s%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         log_colors=log_colors,
     )
+
+
+def setup_logging(log_level: int):
     handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
+    handler.setFormatter(create_color_formatter())
 
     root_logger = logging.getLogger()
-    root_logger.setLevel(settings.get_log_level())
+    root_logger.setLevel(log_level)
     root_logger.addHandler(handler)
 
 
 settings = Settings()
-setup_logging()
+setup_logging(settings.get_log_level())

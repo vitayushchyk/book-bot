@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 
 
 class BaseShop(ABC):
-    def __init__(self, driver, baseurl: str):
-        self.driver = driver
+    def __init__(self, baseurl: str):
+
         self.baseurl = baseurl
 
     @abstractmethod

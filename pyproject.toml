@@ -21,6 +21,10 @@ asyncio-redis = "^0.16.0"
 asyncio = "^3.4.3"
 aiohttp = "^3.11.18"
 colorlog = "^6.9.0"
+sqlmodel = "^0.0.24"
+alembic = "^1.15.2"
+psycopg2-binary = "^2.9.10"
+asyncpg = "^0.30.0"
 
 
 
