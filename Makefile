@@ -35,3 +35,12 @@ open_log: ## Open api log
 
 build: ## Rebuild application
 	docker compose build
+
+create_migrations: run_app ## Create migration. Usage `make create_migrations m="migration message"`
+ifeq ($(strip $(m)),)
+	$(error 'Migration should contains message. Please use make create_migrations m="some message here"')
+endif
+	docker compose exec bot bash -c "poetry run alembic revision --autogenerate -m '$(m)'"
+
+migrate: run_app ## Apply migrations
+	docker compose exec bot bash -c "poetry run alembic upgrade head"

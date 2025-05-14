@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     postgres_password: SecretStr
 
     db_host: str = "db"
-    echo_query: bool = True
+    echo_query: bool = True  # just for dev
     db_port: int = 5432
 
     redis_host: str = "redis"
@@ -56,7 +56,7 @@ class Settings(BaseSettings):
             scheme="postgresql+asyncpg",
             host=self.db_host,
             port=self.db_port,
-            path=f"/{self.postgres_db}",
+            path=f"{self.postgres_db}",
             username=self.postgres_user.get_secret_value(),
             password=quote(self.postgres_password.get_secret_value()),
         )
@@ -87,7 +87,7 @@ def create_color_formatter() -> logging.Formatter:
         "CRITICAL": "bold_red",
     }
     return colorlog.ColoredFormatter(
-        "%(log_color)s%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        fmt="%(log_color)s%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         log_colors=log_colors,
     )
 
