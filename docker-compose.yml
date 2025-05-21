@@ -6,7 +6,7 @@ services:
     image: book-helper-bot:latest
     env_file:
       - .env
-    command: [ "poetry", "run", "python", "main.py" ]
+    command: ["poetry", "run", "watchmedo", "auto-restart", "--recursive", "--", "python", "main.py"]
     volumes:
       - .:/app
     depends_on:

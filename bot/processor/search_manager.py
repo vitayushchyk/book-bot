@@ -2,14 +2,14 @@ import asyncio
 import logging
 from typing import List
 
-from bot.base.base_shop import BaseShop
+from bot.manager.base_manager import BaseBManager
 from bot.utils.cache_manager import CacheManager
 
 
 class BookSearchManager:
     def __init__(
         self,
-        shops: List[BaseShop],
+        shops: List[BaseBManager],
         max_concurrent_requests: int = 10,
         timeout: int = 30,
     ):

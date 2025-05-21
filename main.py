@@ -8,14 +8,6 @@ from telegram.ext import (
     filters,
 )
 
-from bot.book_shop.bookling import Bookling
-from bot.book_shop.e_knygarnya import EKnygarnya
-from bot.book_shop.ksd import KSD
-from bot.book_shop.readeat import Readeat
-from bot.book_shop.sens import Sens
-from bot.book_shop.vivat import Vivat
-from bot.book_shop.yakaboo import Yakaboo
-from bot.book_shop.zhupansky_publisher import ZhupanskyPublisher
 from bot.core.config import settings
 from bot.handlers.shops_handler import (
     NAME_BOOK,
@@ -24,6 +16,15 @@ from bot.handlers.shops_handler import (
     start_search_book_handler,
 )
 from bot.handlers.start_handler import start
+from bot.manager.bookling import Bookling
+from bot.manager.e_knygarnya import EKnygarnya
+from bot.manager.ksd import KSD
+from bot.manager.old_lion import OldLion
+from bot.manager.readeat import Readeat
+from bot.manager.sens import Sens
+from bot.manager.vivat import Vivat
+from bot.manager.yakaboo import Yakaboo
+from bot.manager.zhupansky_publisher import ZhupanskyPublisher
 from bot.processor.search_manager import BookSearchManager
 
 logging.basicConfig()
@@ -33,17 +34,27 @@ logging.getLogger().setLevel(settings.get_log_level())
 def get_app():
     logging.info("Initializing the bot...")
     try:
-        # yakaboo = Yakaboo(settings.search_url_yakaboo)
-        # sens = Sens( settings.search_url_sens)
-        # readeat = Readeat(settings.search_url_readeat)
-        # eknygarnya = EKnygarnya(settings.search_url_eknygarnya)
-        # zhupansky = ZhupanskyPublisher(settings.search_url_zhupansky)
-        # bookling = Bookling(settings.search_url_bookling)
-        # ksd = KSD(settings.search_url_ksd)
-        # vivat = Vivat(settings.search_url_vivat)
-        # # lion = OldLion(settings.search_url_old_lion)
+        yakaboo = Yakaboo(settings.search_url_yakaboo)
+        sens = Sens(settings.search_url_sens)
+        readeat = Readeat(settings.search_url_readeat)
+        eknygarnya = EKnygarnya(settings.search_url_eknygarnya)
+        zhupansky = ZhupanskyPublisher(settings.search_url_zhupansky)
+        bookling = Bookling(settings.search_url_bookling)
+        ksd = KSD(settings.search_url_ksd)
+        vivat = Vivat(settings.search_url_vivat)
+        lion = OldLion(settings.search_url_old_lion)
         search_manager = BookSearchManager(
-            [],
+            [
+                yakaboo,
+                sens,
+                readeat,
+                eknygarnya,
+                zhupansky,
+                bookling,
+                ksd,
+                vivat,
+                lion,
+            ],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
 

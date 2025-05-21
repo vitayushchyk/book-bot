@@ -74,10 +74,10 @@ async def book_name_handle(
                     escaped_link = book.get("link", "#")
 
                     book_response = (
-                        f"`🔵🟡🔵🟡🔵`\n\n"
                         f"📝`Шо по назві?` {escaped_title}\n"
                         f"💸 `Шо по чом?` {escaped_price}\n"
                         f"[🚀 Гоу за нею]({escaped_link})\n\n"
+                        f"`🔵🟡🔵🟡🔵`\n\n"
                     )
 
                     if (
