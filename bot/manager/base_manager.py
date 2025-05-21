@@ -2,7 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 
 
-class BaseBManager(ABC):
+class BaseManager(ABC):
     def __init__(
         self,
         baseurl: str,
