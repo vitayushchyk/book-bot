@@ -1,4 +1,3 @@
-import json
 import logging
 from asyncio import gather
 from typing import List, Optional
@@ -21,9 +20,11 @@ class VivatParser(BaseParser, FetchPageMixin):
             return []
 
         try:
-            data = json.loads(response_text)
-        except json.JSONDecodeError:
-            logging.error(f"[Vivat Store] Failed to decode JSON from {search_url}")
+            data = await self._parse_json(response_text)
+            if not data:
+                return []
+        except Exception as e:
+            logging.error(f"[Vivat Store] An error occurred: {e}")
             return []
 
         results = data.get("results", {})

@@ -1,4 +1,3 @@
-import json
 import logging
 from typing import List, Optional
 
@@ -39,8 +38,8 @@ class ZhupanskyParser(BaseParser, FetchPageMixin):
                 logging.warning("[Zhupansky Parser] No response received from server.")
                 return []
 
-            json_data = json.loads(response_text)
-            embedded_html = json_data.get("html", "")
+            data = await self._parse_json(response_text)
+            embedded_html = data.get("html", "")
             if not embedded_html:
                 logging.warning(
                     "[Zhupansky Parser] Field 'html' not found in JSON response."
