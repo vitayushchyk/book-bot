@@ -1,29 +1,29 @@
+import json
 import logging
+from asyncio import gather
 from typing import List, Optional
 
-import requests
 from bs4 import BeautifulSoup
 
+from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.parser.base_parser import BaseParser
 
 
-class VivatParser(BaseParser):
-
+class VivatParser(BaseParser, FetchPageMixin):
     PRICE_SELECTOR = "meta[property='product:price:amount'][content]"
 
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.base_url}{query.strip()}"
-        response = requests.get(search_url)
+        response_text = await self.fetch_page(search_url)
 
-        if response.status_code != 200:
-            logging.error(
-                f"[Vivat Store] Request to URL {search_url} failed with status code {response.status_code}."
-            )
+        if not response_text:
+            logging.warning("[Vivat Store] No response received from server.")
             return []
 
         try:
-            data = response.json()
-        except Exception as e:
+            data = json.loads(response_text)
+        except json.JSONDecodeError:
+            logging.error(f"[Vivat Store] Failed to decode JSON from {search_url}")
             return []
 
         results = data.get("results", {})
@@ -44,6 +44,8 @@ class VivatParser(BaseParser):
                 continue
 
             for item in items:
+                # If items contain nested lists (e.g., [[{}]])
+
                 if isinstance(item, list):
                     for sub_item in item:
                         if isinstance(sub_item, dict) and not sub_item.get(
@@ -52,64 +54,43 @@ class VivatParser(BaseParser):
                             books.append(
                                 {
                                     "name": sub_item.get("name"),
-                                    "url": sub_item.get("url"),
+                                    "url": sub_item.get("url", "#"),
                                 }
                             )
+                # If items contain a regular dictionary
                 elif isinstance(item, dict):
                     if not item.get("is_info_feed"):
                         books.append(
                             {
                                 "name": item.get("name"),
-                                "url": item.get("url"),
+                                "url": item.get("url", "#"),
                             }
                         )
 
-        logging.info(f"[Vivat Store] Found {len(books)} books for query '{query}'.")
+        books_prices = await gather(
+            *[self._fetch_book_price(book["url"]) for book in books]
+        )
+        for book, price in zip(books, books_prices):
+            book["price"] = price
+
         return books
 
-    async def _get_book_price(self, book_url: str) -> Optional[dict]:
-        response = requests.get(book_url)
-
-        if response.status_code != 200:
-            return {"price": "Price not found"}
-
-        soup = BeautifulSoup(response.text, features="html.parser")
-
-        price = soup.select_one(self.PRICE_SELECTOR)
-
-        if price:
-            price_content = price.get("content").strip()
-            if price_content.replace(".", "").isdigit():
-                logging.info(
-                    f"[Vivat Store] Price successfully parsed: {price_content}"
+    async def _fetch_book_price(self, book_link: str) -> Optional[str]:
+        try:
+            response_text = await self.fetch_page(book_link)
+            logging.info(f"[Vivat Parser] Fetching price for book link: {book_link}")
+            if not response_text:
+                logging.warning(
+                    f"[Vivat Parser] No response for book link: {book_link}"
                 )
-            else:
-                logging.error(f"[Vivat Store] Invalid price format: {price_content}")
-        else:
-            logging.info("[Vivat Store] Price not found in HTML document.")
-
-        return {
-            "price": price.get("content") if price else "Price not found",
-        }
-
-    async def parse_books(self, query: str) -> List[dict]:
-        books = await self.fetch_books_data(query)
-        results = []
-
-        for book in books:
-            price_data = await self._get_book_price(book["url"])
-            logging.info(
-                f"[Vivat Store] Parsed price for book '{book['name']}': {price_data}"
+                return "Price not available"
+            product_soup = BeautifulSoup(response_text, features="html.parser")
+            price_meta = product_soup.select_one(self.PRICE_SELECTOR)
+            if price_meta and price_meta.get("content"):
+                return f"{price_meta['content']} грн"
+            return "Price not available"
+        except Exception as e:
+            logging.error(
+                f"[Vivat Parser] Error fetching price for book: {e}", exc_info=True
             )
-            results.append(
-                {
-                    "title": book["name"],
-                    "url": book["url"],
-                    "price": price_data["price"],
-                }
-            )
-
-        logging.info(
-            f"[Vivat Store] Completed parsing {len(results)} books for query '{query}'."
-        )
-        return results
+            return "Price not available"
