@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     search_url_vivat: str
     api_search_url_old_lion: str
     search_url_old_lion: str
+    search_url_mbooks: str
+    base_url_mbooks: str
 
     log_level: str = "INFO"
 

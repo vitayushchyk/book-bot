@@ -19,12 +19,14 @@ from bot.handlers.start_handler import start
 from bot.manager.bookling import Bookling
 from bot.manager.e_knygarnya import EKnygarnya
 from bot.manager.ksd import KSD
+from bot.manager.mbooks import MegogoBooks
 from bot.manager.old_lion import OldLion
 from bot.manager.readeat import Readeat
 from bot.manager.sens import Sens
 from bot.manager.vivat import Vivat
 from bot.manager.yakaboo import Yakaboo
 from bot.manager.zhupansky_publisher import ZhupanskyPublisher
+from bot.parser.mbooks_parser import MegogoBooksParser
 from bot.processor.search_manager import BookSearchManager
 
 logging.basicConfig()
@@ -43,17 +45,10 @@ def get_app():
         ksd = KSD(settings.search_url_ksd)
         vivat = Vivat(settings.search_url_vivat)
         lion = OldLion(settings.search_url_old_lion)
+        mbooks = MegogoBooks(settings.search_url_mbooks)
         search_manager = BookSearchManager(
             [
-                yakaboo,
-                sens,
-                readeat,
-                eknygarnya,
-                zhupansky,
-                bookling,
-                ksd,
-                vivat,
-                lion,
+                mbooks,
             ],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
