@@ -1,4 +1,3 @@
-import json
 import logging
 from typing import List
 
@@ -28,10 +27,10 @@ class OldLionParser(BaseParser, FetchPageMixin):
             return []
 
         try:
-            data = json.loads(response_text)
+            data = await self._parse_json(response_text)
             results = data.get("data", [])
         except Exception as e:
-
+            logging.error(f"[Old Lion Parser] Error parsing data: {e}")
             return []
 
         books = []
