@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     search_url_old_lion: str
     search_url_mbooks: str
     base_url_mbooks: str
+    search_url_fabula: str
 
     log_level: str = "INFO"
 
