@@ -33,12 +33,16 @@ class FabulaParser(BaseParser, FetchPageMixin):
         books = []
         for book in soup.select(self.BOOK_CONTAINER):
             try:
-
                 title_elem = book.select_one(self.TITLE_ELEMENT)
                 title = title_elem.text.strip()
 
-                price_elem = book.select_one(self.PRICE_ELEMENT) or book.select_one()
-                price = price_elem.text.strip()
+                price_elem = book.select_one(self.PRICE_ELEMENT)
+                raw_price = price_elem.text.strip() if price_elem else "0 грн"
+
+                if raw_price.endswith(",00 грн"):
+                    price = raw_price.replace(",00 грн", " грн")
+                else:
+                    price = raw_price
 
                 url_elem = title_elem if title_elem else None
                 relative_url = url_elem.get(self.URL_ATTRIBUTE) if url_elem else None
