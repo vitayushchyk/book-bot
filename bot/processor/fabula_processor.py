@@ -1,0 +1,7 @@
+from bot.processor.base_processor import BaseProcessor
+
+
+class FabulaProcessor(BaseProcessor):
+    @property
+    def shop_name(self):
+        return "Fabula"

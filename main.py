@@ -7,6 +7,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
+from websocket import frame_buffer
 
 from bot.core.config import settings
 from bot.handlers.shops_handler import (
@@ -18,6 +19,7 @@ from bot.handlers.shops_handler import (
 from bot.handlers.start_handler import start
 from bot.manager.bookling import Bookling
 from bot.manager.e_knygarnya import EKnygarnya
+from bot.manager.fabula import Fabula
 from bot.manager.ksd import KSD
 from bot.manager.mbooks import MegogoBooks
 from bot.manager.old_lion import OldLion
@@ -26,6 +28,7 @@ from bot.manager.sens import Sens
 from bot.manager.vivat import Vivat
 from bot.manager.yakaboo import Yakaboo
 from bot.manager.zhupansky_publisher import ZhupanskyPublisher
+from bot.parser.fabula_parser import FabulaParser
 from bot.parser.mbooks_parser import MegogoBooksParser
 from bot.processor.search_manager import BookSearchManager
 
@@ -46,9 +49,10 @@ def get_app():
         vivat = Vivat(settings.search_url_vivat)
         lion = OldLion(settings.search_url_old_lion)
         mbooks = MegogoBooks(settings.search_url_mbooks)
+        fabula = Fabula(settings.search_url_fabula)
         search_manager = BookSearchManager(
             [
-                mbooks,
+                fabula,
             ],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
