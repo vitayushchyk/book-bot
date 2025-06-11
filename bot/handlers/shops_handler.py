@@ -53,7 +53,39 @@ async def book_name_handle(
             for shop_name, books in grouped_books.items():
                 grouped_list.append({"shop": shop_name, "books": books})
 
+            cheapest_book = min(
+                books_info,
+                key=lambda x: (
+                    float(x.get("price", "inf").split()[0])
+                    if isinstance(x.get("price"), str)
+                    and x.get("price").split()[0].isdigit()
+                    else float("inf")
+                ),
+            )
+
             response_parts = []
+            if cheapest_book:
+                escaped_title = escape_markdown(
+                    cheapest_book.get("title", "Гугл поламався"), version=2
+                )
+                escaped_price = escape_markdown(
+                    cheapest_book.get("price", "Мабуть, безцінна"), version=2
+                )
+                escaped_link = cheapest_book.get("link", "#")
+                escaped_shop = escape_markdown(
+                    cheapest_book.get("shop", "").upper(), version=2
+                )
+
+                cheapest_book_response = (
+                    f"`🔥 УРВАТЬ НАЙДЕШЕВШУ 🔥`\n\n"
+                    f"📝`Шо по назві?` {escaped_title}\n"
+                    f"💸 `Шо по чом?` {escaped_price}\n"
+                    f"🛒 `Де шукать?` {escaped_shop}\n"
+                    f"[🚀 Гоу за нею]({escaped_link})\n\n"
+                    f"`🔵🟡🔵🟡🔵`\n\n"
+                )
+                response_parts.append(cheapest_book_response)
+
             current_response = ""
 
             for group in grouped_list:
@@ -61,7 +93,6 @@ async def book_name_handle(
                 books = group["books"]
 
                 escaped_shop_name = escape_markdown(shop_name.upper(), version=2)
-
                 shop_response = f"`В кіоску: - ✨{escaped_shop_name}✨`\n\n"
 
                 for book in books:
@@ -85,7 +116,6 @@ async def book_name_handle(
                         > MAX_MESSAGE_LENGTH
                     ):
                         response_parts.append(current_response)
-
                         current_response = ""
 
                     if shop_response not in current_response:

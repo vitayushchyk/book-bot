@@ -10,7 +10,8 @@ from bot.parser.base_parser import BaseParser
 class FabulaParser(BaseParser, FetchPageMixin):
     BOOK_CONTAINER = ".product__content"
     TITLE_ELEMENT = ".product__title"
-    PRICE_ELEMENT = ".product__price-new"
+    PRICE_ELEMENT_NEW = ".product__price-new"
+    PRICE_ELEMENT = ".product__price"
     URL_ATTRIBUTE = "href"
 
     async def fetch_books_data(self, query: str) -> List[dict]:
@@ -36,7 +37,9 @@ class FabulaParser(BaseParser, FetchPageMixin):
                 title_elem = book.select_one(self.TITLE_ELEMENT)
                 title = title_elem.text.strip()
 
-                price_elem = book.select_one(self.PRICE_ELEMENT)
+                price_elem = book.select_one(self.PRICE_ELEMENT_NEW)
+                if not price_elem:
+                    price_elem = book.select_one(self.PRICE_ELEMENT)
                 raw_price = price_elem.text.strip() if price_elem else "0 грн"
 
                 if raw_price.endswith(",00 грн"):

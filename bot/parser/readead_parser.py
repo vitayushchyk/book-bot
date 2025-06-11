@@ -13,6 +13,7 @@ class ReadeatParser(FetchPageMixin, BaseParser):
     PRICE_ATTRIBUTE = "data-price"
     URL_SELECTOR = "a.d-block"
     URL_ATTRIBUTE = "href"
+    AVALIABLE_BOOKS_SELECTOR = "div.notstock"
 
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.base_url}{query.strip()}"
@@ -35,9 +36,19 @@ class ReadeatParser(FetchPageMixin, BaseParser):
         for book in soup.select(self.BOOK_CONTAINER):
             try:
 
-                title = book.get(self.TITLE_ATTRIBUTE)
+                not_in_stock = book.select_one(self.AVALIABLE_BOOKS_SELECTOR)
+                if not_in_stock:
+                    logging.info("[Readeat Parser] Book is not available, skipping.")
+                    continue
 
+                title = book.get(self.TITLE_ATTRIBUTE)
                 price = book.get(self.PRICE_ATTRIBUTE)
+
+                if not title or not price:
+                    logging.warning(
+                        "[Readeat Parser] Missing title or price, skipping."
+                    )
+                    continue
 
                 url = await self._extract_attribute(
                     element=book,
@@ -48,8 +59,8 @@ class ReadeatParser(FetchPageMixin, BaseParser):
 
                 books.append({"title": title, "price": price, "url": url})
 
-            except AttributeError:
-                logging.warning("[Readeat Parser] Skipped a card due to missing data.")
+            except AttributeError as e:
+                logging.warning(f"[Readeat Parser] Skipped a card due to error: {e}.")
                 continue
 
         return books
