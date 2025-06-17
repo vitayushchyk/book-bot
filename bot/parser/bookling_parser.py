@@ -1,5 +1,6 @@
 import logging
 from typing import List
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
@@ -13,11 +14,12 @@ class BooklingParser(FetchPageMixin, BaseParser):
     PRICE_SELECTOR = ".price .price_value"
     URL_SELECTOR = ".item-title a"
     URL_ATTRIBUTE = "href"
+    IN_STOCK_SELECTOR = ".item-stock .value"
 
     async def fetch_books_data(self, query: str) -> List[dict]:
 
         search_url = f"{self.base_url}{query.strip()}"
-        logging.info(f"[Bookling Parser] Fetching data from URL: {search_url}.")
+        logging.info(f"[Bookling Parser] Fetching data from URL: {search_url}")
 
         html_text = await self.fetch_page(search_url)
         if not html_text:
@@ -27,7 +29,7 @@ class BooklingParser(FetchPageMixin, BaseParser):
         books = await self._parse_books(soup)
 
         logging.info(
-            f"[Bookling Parser] Successfully fetched {len(books)} books from URL: {search_url}."
+            f"[Bookling Parser] Successfully fetched {len(books)} books from URL: {search_url}"
         )
         return books
 
@@ -36,26 +38,34 @@ class BooklingParser(FetchPageMixin, BaseParser):
 
         for book in soup.select(self.BOOK_CONTAINER):
             try:
+                availability_element = book.select_one(self.IN_STOCK_SELECTOR)
+                if availability_element:
+                    availability_text = availability_element.get_text(strip=True)
+                    if "Немає в наявності" in availability_text:
+                        logging.debug(
+                            "[Bookling Parser] Skipping book as 'OUT OF STOCK'"
+                        )
+                        continue
+                title_elm = book.select_one(self.TITLE_SELECTOR)
+                title = title_elm.get_text(strip=True) if title_elm else None
+                price_elm = book.select_one(self.PRICE_SELECTOR)
+                price = price_elm.get_text(strip=True) if price_elm else None
+                url_elm = book.select_one(self.URL_SELECTOR)
+                relative_url = url_elm[self.URL_ATTRIBUTE]
+                url = urljoin(self.base_url, relative_url)
 
-                title = await self._extract_text(
-                    element=book, selector=self.TITLE_SELECTOR
-                )
-
-                price = await self._extract_text(
-                    element=book, selector=self.PRICE_SELECTOR
-                )
-
-                url = await self._extract_attribute(
-                    element=book,
-                    selector=self.URL_SELECTOR,
-                    attribute=self.URL_ATTRIBUTE,
-                    base_url=self.base_url,
-                )
+                if not title or not price or not url:
+                    logging.warning(
+                        f"[Bookling Parser] Skipped a card due to missing data: {title}, {price}, {url}"
+                    )
+                    continue
 
                 books.append({"title": title, "price": price, "url": url})
 
-            except AttributeError:
-                logging.warning("[Bookling Parser] Skipped a card due to missing data.")
+            except AttributeError as e:
+                logging.warning(
+                    f"[Bookling Parser] Skipped a card due to an AttributeError: {str(e)}"
+                )
                 continue
 
         return books
