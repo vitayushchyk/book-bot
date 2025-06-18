@@ -8,7 +8,7 @@ from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.parser.base_parser import BaseParser
 
 
-class BooklingParser(FetchPageMixin, BaseParser):
+class BooklingParser(BaseParser, FetchPageMixin):
     BOOK_CONTAINER = ".item_info.TYPE_1"
     TITLE_SELECTOR = ".item-title a span"
     PRICE_SELECTOR = ".price .price_value"
