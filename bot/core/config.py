@@ -28,7 +28,8 @@ class Settings(BaseSettings):
     search_url_yakaboo: str
     search_url_zhupansky: str
     search_url_bookling: str
-    search_url_readeat: str
+    search_api_url_readeat: str
+    base_url_readeat: str
     search_url_ksd: str
     search_url_vivat: str
     api_search_url_old_lion: str

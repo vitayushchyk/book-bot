@@ -1,66 +1,60 @@
 import logging
 from typing import List
-
-from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 
 from bot.base.base_fetch_page_mixin import FetchPageMixin
+from bot.core.config import settings
 from bot.parser.base_parser import BaseParser
 
 
 class ReadeatParser(FetchPageMixin, BaseParser):
-    BOOK_CONTAINER = "div.fn_product.card.product-card"
-    TITLE_ATTRIBUTE = "data-name"
-    PRICE_ATTRIBUTE = "data-price"
-    URL_SELECTOR = "a.d-block"
-    URL_ATTRIBUTE = "href"
-    AVALIABLE_BOOKS_SELECTOR = "div.notstock"
+    def __init__(self, base_url):
+        super().__init__(base_url=base_url)
+        self.api_url = settings.search_api_url_readeat
 
     async def fetch_books_data(self, query: str) -> List[dict]:
-        search_url = f"{self.base_url}{query.strip()}"
-        logging.info(f"[Readeat Parser] Fetching data from URL: {search_url}.")
+        search_url = f"{self.api_url}{query.strip()}"
+        logging.info(f"[ Readeat Parser] Fetching data from URL: {search_url}.")
 
-        html_text = await self.fetch_page(search_url)
-        if not html_text:
+        try:
+
+            response_text = await self.fetch_page(search_url)
+
+            if not response_text:
+                logging.error(
+                    f"[ Readeat Parser] Failed to fetch data from URL: {search_url}."
+                )
+                return []
+
+            data = await self._parse_json(response_text)
+        except Exception as e:
+            logging.error(
+                f"[ Readeat Parser] An error occurred during data fetching: {e}"
+            )
             return []
 
-        soup = BeautifulSoup(html_text, features="html.parser")
-        books = await self._parse_books(soup)
-        logging.info(
-            f"[Readeat Parser] Successfully fetched {len(books)} books from URL: {search_url}."
-        )
-        return books
-
-    async def _parse_books(self, soup: BeautifulSoup) -> List[dict]:
         books = []
 
-        for book in soup.select(self.BOOK_CONTAINER):
-            try:
+        products = data.get("products", [])
+        for product in products:
 
-                not_in_stock = book.select_one(self.AVALIABLE_BOOKS_SELECTOR)
-                if not_in_stock:
-                    logging.info("[Readeat Parser] Book is not available, skipping.")
-                    continue
+            if isinstance(product, dict):
+                self._add_book(product, books)
 
-                title = book.get(self.TITLE_ATTRIBUTE)
-                price = book.get(self.PRICE_ATTRIBUTE)
-
-                if not title or not price:
-                    logging.warning(
-                        "[Readeat Parser] Missing title or price, skipping."
-                    )
-                    continue
-
-                url = await self._extract_attribute(
-                    element=book,
-                    selector=self.URL_SELECTOR,
-                    attribute=self.URL_ATTRIBUTE,
-                    base_url=self.base_url,
-                )
-
-                books.append({"title": title, "price": price, "url": url})
-
-            except AttributeError as e:
-                logging.warning(f"[Readeat Parser] Skipped a card due to error: {e}.")
-                continue
-
+        logging.info(f"[ Readeat Parser] Parsed {len(books)} raw books from data.")
         return books
+
+    @staticmethod
+    def _add_book(item: dict, books: list):
+        title = item.get("name")
+        price = item.get("price")
+        relative_url = item.get("link")
+        full_url = urljoin(settings.base_url_readeat, relative_url)
+        if title:
+            books.append(
+                {
+                    "title": title,
+                    "price": price,
+                    "link": full_url,
+                }
+            )

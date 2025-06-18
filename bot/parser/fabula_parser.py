@@ -9,10 +9,11 @@ from bot.parser.base_parser import BaseParser
 
 class FabulaParser(BaseParser, FetchPageMixin):
     BOOK_CONTAINER = ".product__content"
-    TITLE_ELEMENT = ".product__title"
-    PRICE_ELEMENT_NEW = ".product__price-new"
-    PRICE_ELEMENT = ".product__price"
+    TITLE_SELECTOR = ".product__title"
+    PRICE_SELECTOR_NEW = ".product__price-new"
+    PRICE_SELECTOR = ".product__price"
     URL_ATTRIBUTE = "href"
+    IN_STOCK_SELECTOR = ".not-available"
 
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.base_url}{query.strip()}"
@@ -34,20 +35,28 @@ class FabulaParser(BaseParser, FetchPageMixin):
         books = []
         for book in soup.select(self.BOOK_CONTAINER):
             try:
-                title_elem = book.select_one(self.TITLE_ELEMENT)
-                title = title_elem.text.strip()
 
-                price_elem = book.select_one(self.PRICE_ELEMENT_NEW)
-                if not price_elem:
-                    price_elem = book.select_one(self.PRICE_ELEMENT)
-                raw_price = price_elem.text.strip() if price_elem else "0 грн"
+                availability_element = book.select_one(self.PRICE_SELECTOR)
+                if availability_element:
+                    availability_text = availability_element.get_text(strip=True)
+                    if "Очікується" in availability_text:
+                        logging.debug("[Fabula Parser] Skipping book as 'OUT OF STOCK'")
+                        continue
 
-                if raw_price.endswith(",00 грн"):
-                    price = raw_price.replace(",00 грн", " грн")
-                else:
-                    price = raw_price
+                title_elm = book.select_one(self.TITLE_SELECTOR)
+                title = title_elm.get_text(strip=True) if title_elm else None
 
-                url_elem = title_elem if title_elem else None
+                price_elm = book.select_one(self.PRICE_SELECTOR_NEW) or book.select_one(
+                    self.PRICE_SELECTOR
+                )
+                raw_price = price_elm.text.strip() if price_elm else "0 грн"
+                price = (
+                    raw_price.replace(",00 грн", " грн")
+                    if raw_price.endswith(",00 грн")
+                    else raw_price
+                )
+
+                url_elem = title_elm if title_elm else None
                 relative_url = url_elem.get(self.URL_ATTRIBUTE) if url_elem else None
                 full_url = f"{relative_url}"
 
@@ -55,7 +64,7 @@ class FabulaParser(BaseParser, FetchPageMixin):
                 logging.info(
                     f"[Fabula Parser] Parsed book: {title}, Price: {price}, URL: {full_url}"
                 )
-            except Exception as e:
+            except AttributeError as e:
                 logging.warning(f"[Fabula Parser] Skipped a card due to error: {e}")
                 continue
         return books
