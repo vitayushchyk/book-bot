@@ -2,8 +2,6 @@ import logging
 from typing import List
 from urllib.parse import urljoin
 
-from bs4 import BeautifulSoup
-
 from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.core.config import settings
 from bot.parser.base_parser import BaseParser
@@ -31,7 +29,7 @@ class ReadeatParser(FetchPageMixin, BaseParser):
             data = await self._parse_json(response_text)
         except Exception as e:
             logging.error(
-                f"[ ReadeatParser] An error occurred during data fetching: {e}"
+                f"[ Readeat Parser] An error occurred during data fetching: {e}"
             )
             return []
 
@@ -43,7 +41,7 @@ class ReadeatParser(FetchPageMixin, BaseParser):
             if isinstance(product, dict):
                 self._add_book(product, books)
 
-        logging.info(f"[ ReadeatParser] Parsed {len(books)} raw books from data.")
+        logging.info(f"[ Readeat Parser] Parsed {len(books)} raw books from data.")
         return books
 
     @staticmethod

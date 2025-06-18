@@ -1,5 +1,6 @@
 import logging
 from typing import List
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
@@ -39,28 +40,32 @@ class SensBookParser(BaseParser, FetchPageMixin):
 
         for card in soup.select(self.BOOK_CONTAINER):
             try:
-                title = await self._extract_text(
-                    card,
-                    parent_tag=self.TITLE_PARENT_TAG,
-                    parent_class=self.TITLE_PARENT_CLASS,
-                    child_tag=self.TITLE_CHILD_TAG,
+                title_elm = card.find(
+                    self.TITLE_PARENT_TAG, class_=self.TITLE_PARENT_CLASS
+                )
+                title = (
+                    title_elm.find(self.TITLE_CHILD_TAG).get_text(strip=True)
+                    if title_elm
+                    else None
                 )
 
-                price = await self._extract_text(
-                    card,
-                    parent_tag=self.PRICE_PARENT_TAG,
-                    parent_class=self.PRICE_PARENT_CLASS,
+                price_elm = card.find(
+                    self.PRICE_PARENT_TAG, class_=self.PRICE_PARENT_CLASS
+                )
+                price = price_elm.get_text(strip=True) if price_elm else None
+
+                link_parent = card.find(
+                    self.TITLE_PARENT_TAG, class_=self.LINK_PARENT_CLASS
+                )
+                link_elm = link_parent.find(self.LINK_TAG) if link_parent else None
+                link = (
+                    urljoin(self.base_url, link_elm[self.LINK_ATTRIBUTE])
+                    if link_elm
+                    else None
                 )
 
-                link = await self._extract_attribute(
-                    card,
-                    tag=self.LINK_TAG,
-                    attribute=self.LINK_ATTRIBUTE,
-                    parent_class=self.LINK_PARENT_CLASS,
-                    base_url=self.base_url,
-                )
-
-                books.append({"title": title, "price": price, "url": link})
+                if title and price and link:
+                    books.append({"title": title, "price": price, "url": link})
 
             except AttributeError:
                 logging.warning("[Sens Parser] Skipped a card due to missing data.")

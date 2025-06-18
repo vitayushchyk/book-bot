@@ -1,5 +1,6 @@
 import logging
 from typing import List
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
@@ -12,7 +13,7 @@ class YakabooParser(FetchPageMixin, BaseParser):
     BOOK_CONTAINER = "div.category-card"
     TITLE_SELECTOR = "a.ui-card-title.category-card__name"
     PRICE_SELECTOR = "div.category-card__content .category-card__price"
-    SPECIAL_PRICE_SELECTOR = ".special-price span"
+    NEW_PRICE_SELECTOR = ".special-price span"
     URL_SELECTOR = "a.category-card__image"
     URL_ATTRIBUTE = "href"
 
@@ -37,24 +38,26 @@ class YakabooParser(FetchPageMixin, BaseParser):
         for book in soup.select(self.BOOK_CONTAINER):
             try:
 
-                title = await self._extract_text(
-                    element=book, selector=self.TITLE_SELECTOR
+                title_elm = book.select_one(self.TITLE_SELECTOR)
+                title = title_elm.get_text(strip=True) if title_elm else None
+
+                is_special_price = book.select_one(self.NEW_PRICE_SELECTOR)
+                price = (
+                    is_special_price.get_text(strip=True) if is_special_price else None
+                )
+                if not price:
+                    price_elm = book.select_one(self.PRICE_SELECTOR)
+                    price = price_elm.get_text(strip=True) if price_elm else None
+
+                url_element = book.select_one(self.URL_SELECTOR)
+                url = (
+                    urljoin(self.base_url, url_element[self.URL_ATTRIBUTE])
+                    if url_element and self.URL_ATTRIBUTE in url_element.attrs
+                    else None
                 )
 
-                price = await self._extract_text(
-                    element=book, selector=self.SPECIAL_PRICE_SELECTOR
-                ) or await self._extract_text(
-                    element=book, selector=self.PRICE_SELECTOR
-                )
-
-                url = await self._extract_attribute(
-                    element=book,
-                    selector=self.URL_SELECTOR,
-                    attribute=self.URL_ATTRIBUTE,
-                    base_url=self.base_url,
-                )
-
-                books.append({"title": title, "price": price, "url": url})
+                if title and price and url:
+                    books.append({"title": title, "price": price, "url": url})
 
             except AttributeError:
                 logging.warning("[Yakaboo Parser] Skipped a card due to missing data.")

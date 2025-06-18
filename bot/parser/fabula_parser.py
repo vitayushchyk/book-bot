@@ -37,9 +37,6 @@ class FabulaParser(BaseParser, FetchPageMixin):
             try:
 
                 availability_element = book.select_one(self.PRICE_SELECTOR)
-                logging.info(
-                    f"[Fabula Parser] availability_element: {availability_element}"
-                )
                 if availability_element:
                     availability_text = availability_element.get_text(strip=True)
                     if "Очікується" in availability_text:

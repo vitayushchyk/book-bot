@@ -40,7 +40,9 @@ class MegogoBooksParser(BaseParser, FetchPageMixin):
                 title_elm = book.select_one(self.TITLE_ELEMENT)
                 title = title_elm.text.strip()
 
-                price_elm = book.select_one(self.PRICE_ELEMENT) or book.select_one()
+                price_elm = book.select_one(self.PRICE_ELEMENT) or book.select_one(
+                    self.PRICE_ELEMENT
+                )
                 price = price_elm.text.strip()
 
                 url_elm = book.select_one(self.URL_ELEMENT)
