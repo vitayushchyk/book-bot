@@ -41,7 +41,7 @@ def get_app():
     try:
         yakaboo = Yakaboo(settings.search_url_yakaboo)
         sens = Sens(settings.search_url_sens)
-        readeat = Readeat(settings.search_url_readeat)
+        readeat = Readeat(settings.search_api_url_readeat)
         eknygarnya = EKnygarnya(settings.search_url_eknygarnya)
         zhupansky = ZhupanskyPublisher(settings.search_url_zhupansky)
         bookling = Bookling(settings.search_url_bookling)
@@ -51,7 +51,7 @@ def get_app():
         mbooks = MegogoBooks(settings.search_url_mbooks)
         fabula = Fabula(settings.search_url_fabula)
         search_manager = BookSearchManager(
-            [fabula],
+            [readeat],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
 

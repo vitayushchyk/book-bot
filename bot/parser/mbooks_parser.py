@@ -37,21 +37,23 @@ class MegogoBooksParser(BaseParser, FetchPageMixin):
         for book in soup.select(self.BOOK_CONTAINER):
             try:
 
-                title_elem = book.select_one(self.TITLE_ELEMENT)
-                title = title_elem.text.strip()
+                title_elm = book.select_one(self.TITLE_ELEMENT)
+                title = title_elm.text.strip()
 
-                price_elem = book.select_one(self.PRICE_ELEMENT) or book.select_one()
-                price = price_elem.text.strip()
+                price_elm = book.select_one(self.PRICE_ELEMENT) or book.select_one()
+                price = price_elm.text.strip()
 
-                url_elem = book.select_one(self.URL_ELEMENT)
-                relative_url = url_elem.get(self.URL_ATTRIBUTE) if url_elem else None
+                url_elm = book.select_one(self.URL_ELEMENT)
+                relative_url = url_elm.get(self.URL_ATTRIBUTE) if url_elm else None
                 full_url = f"{self.BASE_URL}{relative_url}"
 
                 books.append({"title": title, "price": price, "url": full_url})
                 logging.info(
                     f"[Megogo Parser] Parsed book: {title}, Price: {price}, URL: {full_url}"
                 )
-            except Exception as e:
-                logging.warning(f"[Megogo Parser] Skipped a card due to error: {e}")
+            except AttributeError as e:
+                logging.warning(
+                    f"[Megogo Parser] Skipped a card due to an AttributeError: {str(e)}"
+                )
                 continue
         return books
