@@ -52,17 +52,7 @@ def get_app():
         fabula = Fabula(settings.search_url_fabula)
         search_manager = BookSearchManager(
             [
-                yakaboo,
-                sens,
-                readeat,
-                eknygarnya,
-                zhupansky,
-                bookling,
-                ksd,
-                vivat,
                 lion,
-                mbooks,
-                fabula,
             ],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
