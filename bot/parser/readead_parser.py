@@ -17,7 +17,6 @@ class ReadeatParser(FetchPageMixin, BaseParser):
         logging.info(f"[ Readeat Parser] Fetching data from URL: {search_url}.")
 
         try:
-
             response_text = await self.fetch_page(search_url)
 
             if not response_text:
@@ -33,15 +32,15 @@ class ReadeatParser(FetchPageMixin, BaseParser):
             )
             return []
 
+        books = self._parse_books(data.get("products", []))
+        logging.info(f"[ Readeat Parser] Successfully parsed {len(books)} books.")
+        return books
+
+    def _parse_books(self, products: list) -> List[dict]:
         books = []
-
-        products = data.get("products", [])
         for product in products:
-
             if isinstance(product, dict):
                 self._add_book(product, books)
-
-        logging.info(f"[ Readeat Parser] Parsed {len(books)} raw books from data.")
         return books
 
     @staticmethod
