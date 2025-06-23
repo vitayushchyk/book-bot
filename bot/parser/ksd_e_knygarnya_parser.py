@@ -13,9 +13,7 @@ class KSDeKnygarnyaParser(BaseParser, FetchPageMixin):
         )
 
         try:
-
             response_text = await self.fetch_page(search_url)
-
             if not response_text:
                 logging.error(
                     f"[KSD and EKnygarnya Parser] Failed to fetch data from URL: {search_url}."
@@ -23,41 +21,31 @@ class KSDeKnygarnyaParser(BaseParser, FetchPageMixin):
                 return []
 
             data = await self._parse_json(response_text)
+            item_groups = data.get("results", {}).get("item_groups", [])
         except Exception as e:
             logging.error(
                 f"[KSD and EKnygarnya Parser] An error occurred during data fetching: {e}"
             )
             return []
 
-        books = []
-
-        item_groups = data.get("results", {}).get("item_groups", [])
-        for group in item_groups:
-            items = group.get("items", [])
-            if isinstance(items, list):
-                for item_or_sublist in items:
-                    if isinstance(item_or_sublist, dict):
-                        self._add_book(item_or_sublist, books)
-                    elif isinstance(item_or_sublist, list):
-                        for item in item_or_sublist:
-                            if isinstance(item, dict):
-                                self._add_book(item, books)
-
+        books = self._parse_books(item_groups)
         logging.info(
-            f"[KSD and EKnygarnya Parser] Parsed {len(books)} raw books from data."
+            f"[KSD and EKnygarnya Parser] Successfully parsed {len(books)} books."
         )
         return books
 
-    @staticmethod
-    def _add_book(item: dict, books: list):
-        title = item.get("name")
-        price = item.get("price")
-        url = item.get("url")
-        if title:
-            books.append(
-                {
-                    "title": title,
-                    "price": price,
-                    "url": url,
-                }
-            )
+    def _parse_books(self, item_groups: list) -> List[dict]:
+        books = []
+        for category_group in item_groups:
+            book_items = category_group.get("items", [])
+            if isinstance(book_items, list):
+                for book_or_sublist in book_items:
+                    if isinstance(book_or_sublist, dict):
+                        if book_or_sublist.get("is_presence", True):
+                            self._add_book(book_or_sublist, books)
+                    elif isinstance(book_or_sublist, list):
+                        for book_data in book_or_sublist:
+                            if isinstance(book_data, dict):
+                                if book_data.get("is_presence", True):
+                                    self._add_book(book_data, books)
+        return books

@@ -64,3 +64,18 @@ class BaseParser:
         except json.JSONDecodeError:
             logging.error("Failed to decode JSON from response text.")
             return None
+
+    @staticmethod
+    def _add_book(item: dict, books: list):
+
+        title = item.get("name")
+        price = item.get("price")
+        url = item.get("url")
+        if title:
+            books.append(
+                {
+                    "title": title,
+                    "price": price,
+                    "url": url,
+                }
+            )
