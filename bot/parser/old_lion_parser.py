@@ -14,8 +14,10 @@ class OldLionParser(BaseParser, FetchPageMixin):
         self.api_url = settings.api_search_url_old_lion
 
     PRICE_PARENT_TAG = "div"
-    PRICE_PARENT_CLASS = "product-price ProductCard_price__6Et_j ProductCard_books-wrapper__7G0_l ProductCard_single__BP5h_"
-    PRICE_CHILD_CLASS = "regular lato-h3 ProductCard_regular__zAIrz"
+    BASE_PRICE_CONTAINER = "ProductCard_price__6Et_j"
+    PRICE_CONTAINER = "regular lato-h3 ProductCard_regular__zAIrz"
+    IN_STOCK_CONTAINER = "div.product-page__status"
+    NOT_AVAILABLE_STATUSES = ["Тираж закінчився", "Тимчасово відсутня"]
 
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.api_url}{query.strip()}"
@@ -39,42 +41,80 @@ class OldLionParser(BaseParser, FetchPageMixin):
     async def _parse_books(self, results: list) -> List[dict]:
         books = []
         for book_item in results:
-            title = book_item.get("name", "Title not available")
+            title = book_item.get("name")
+            book_type = book_item.get("type")
             slug = book_item.get("slug")
+
             if not slug:
                 logging.warning(
                     f"[Old Lion Parser] Skipping book without slug: {book_item}"
                 )
                 continue
+
             url = f"{self.base_url}{slug}"
-            price = await self._get_book_price(url)
-            books.append({"title": title, "url": url, "price": price})
+
+            price = 0
+            if book_type in ("book", "ebook"):
+                html = await self.fetch_page(url)
+                if html:
+                    try:
+                        soup = BeautifulSoup(html, features="html.parser")
+
+                        is_available_elm = soup.select_one(self.IN_STOCK_CONTAINER)
+                        if is_available_elm:
+
+                            is_available = is_available_elm.get_text(strip=True)
+
+                            if any(
+                                status in is_available
+                                for status in self.NOT_AVAILABLE_STATUSES
+                            ):
+                                logging.warning(
+                                    f"[Old Lion Parser] Skipping book '{title}' as 'NOT AVAILABLE'"
+                                )
+                                continue
+
+                        # get price
+                        price_containers = soup.find_all(
+                            self.PRICE_PARENT_TAG,
+                            class_=lambda x: x and self.BASE_PRICE_CONTAINER in x,
+                        )
+
+                        for container in price_containers:
+                            price_elm = container.find(
+                                self.PRICE_PARENT_TAG, class_=self.PRICE_CONTAINER
+                            )
+
+                            if price_elm:
+                                try:
+
+                                    price_text = (
+                                        price_elm.text.strip()
+                                        .replace("грн", "")
+                                        .strip()
+                                    )
+
+                                    price_text = price_text.split(".")[0]
+
+                                    price = price_text
+
+                                    break
+                                except Exception as e:
+                                    logging.error(
+                                        f"[Old Lion Parser] Error parsing price for {url}: {e}"
+                                    )
+                                    continue
+
+                    except Exception as e:
+                        logging.error(
+                            f"[Old Lion Parser] Error parsing price for {url}: {e}"
+                        )
+                        continue
+            books.append(
+                {
+                    "title": title,
+                    "url": url,
+                    "price": price,
+                }
+            )
         return books
-
-    async def _get_book_price(self, url: str) -> str:
-        html = await self.fetch_page(url)
-        if not html:
-            return "Price not available"
-
-        try:
-            soup = BeautifulSoup(html, features="html.parser")
-            return self._parse_price(soup)
-        except Exception as e:
-            logging.error(f"[Old Lion Parser] Error parsing price for {url}: {e}")
-            return "Price not available"
-
-    def _parse_price(self, soup: BeautifulSoup) -> str:
-        price_div = soup.find(self.PRICE_PARENT_TAG, class_=self.PRICE_PARENT_CLASS)
-        if price_div:
-            price = price_div.find("div", class_=self.PRICE_CHILD_CLASS)
-            if price:
-                price_text = price.text.strip().replace(",", "").replace(" ", "")
-                try:
-                    numeric_price = "".join(
-                        c for c in price_text if c.isdigit() or c == "."
-                    )
-                    price_value = int(float(numeric_price))
-                    return str(price_value)
-                except ValueError:
-                    return "Price not available"
-        return "Price not available"

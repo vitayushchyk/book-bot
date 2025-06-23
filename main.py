@@ -2,6 +2,7 @@ import logging
 
 from telegram.ext import (
     ApplicationBuilder,
+    CallbackQueryHandler,
     CommandHandler,
     ConversationHandler,
     MessageHandler,
@@ -28,8 +29,6 @@ from bot.manager.sens import Sens
 from bot.manager.vivat import Vivat
 from bot.manager.yakaboo import Yakaboo
 from bot.manager.zhupansky_publisher import ZhupanskyPublisher
-from bot.parser.fabula_parser import FabulaParser
-from bot.parser.mbooks_parser import MegogoBooksParser
 from bot.processor.search_manager import BookSearchManager
 
 logging.basicConfig()
@@ -85,6 +84,7 @@ def get_app():
         app.add_handler(find_book_handler)
 
         logging.info("Bot initialized successfully.")
+
         app.run_polling()
 
     except Exception as e:
