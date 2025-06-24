@@ -13,10 +13,10 @@ class VivatParser(BaseParser, FetchPageMixin):
 
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.base_url}{query.strip()}"
+        logging.info(f"[Vivat Parser] Fetching data from URL: {search_url}")
         response_text = await self.fetch_page(search_url)
 
         if not response_text:
-            logging.warning("[Vivat Store] No response received from server.")
             return []
 
         try:
@@ -31,11 +31,34 @@ class VivatParser(BaseParser, FetchPageMixin):
         if not isinstance(results, dict):
             return []
 
-        books = []
         item_groups = results.get("item_groups", [])
         if not isinstance(item_groups, list):
             return []
 
+        books = await self._parse_books(item_groups)
+        return books
+
+    async def _parse_books(self, item_groups: list) -> List[dict]:
+        books = []
+
+        async def fetch_price(book_link: str) -> Optional[str]:
+            try:
+                response_text = await self.fetch_page(book_link)
+                if not response_text:
+                    return "Price not available"
+                product_soup = BeautifulSoup(response_text, features="html.parser")
+                price_meta = product_soup.select_one(self.PRICE_SELECTOR)
+                if price_meta and price_meta.get("content"):
+                    return f"{price_meta['content']} грн"
+                return "Price not available"
+            except Exception as e:
+                logging.error(
+                    f"[Vivat Parser] Error fetching price for book: {e}",
+                    exc_info=True,
+                )
+                return "Price not available"
+
+        tasks = []
         for group in item_groups:
             if not isinstance(group, dict):
                 continue
@@ -45,53 +68,37 @@ class VivatParser(BaseParser, FetchPageMixin):
                 continue
 
             for item in items:
-                # If items contain nested lists (e.g., [[{}]])
-
                 if isinstance(item, list):
                     for sub_item in item:
-                        if isinstance(sub_item, dict) and not sub_item.get(
-                            "is_info_feed"
-                        ):
-                            books.append(
-                                {
-                                    "name": sub_item.get("name"),
-                                    "url": sub_item.get("url", "#"),
-                                }
-                            )
-                # If items contain a regular dictionary
-                elif isinstance(item, dict):
-                    if not item.get("is_info_feed"):
-                        books.append(
-                            {
-                                "name": item.get("name"),
-                                "url": item.get("url", "#"),
-                            }
-                        )
+                        if isinstance(sub_item, dict):
 
-        books_prices = await gather(
-            *[self._fetch_book_price(book["url"]) for book in books]
-        )
+                            if not sub_item.get("is_presence", True):
+                                logging.warning(
+                                    f"[Vivat Parser] Skipping unavailable book: {sub_item.get('name', 'Unknown')}"
+                                )
+                                continue
+                            book = {
+                                "name": sub_item.get("name"),
+                                "url": sub_item.get("url", "#"),
+                            }
+                            books.append(book)
+                            tasks.append(fetch_price(book["url"]))
+
+                elif isinstance(item, dict):
+                    if not item.get("is_presence", True):
+                        logging.info(
+                            f"[Vivat Parser] Skipping unavailable book: {item.get('name', 'Unknown')}"
+                        )
+                        continue
+                    book = {
+                        "name": item.get("name"),
+                        "url": item.get("url", "#"),
+                    }
+                    books.append(book)
+                    tasks.append(fetch_price(book["url"]))
+
+        books_prices = await gather(*tasks)
         for book, price in zip(books, books_prices):
             book["price"] = price
 
         return books
-
-    async def _fetch_book_price(self, book_link: str) -> Optional[str]:
-        try:
-            response_text = await self.fetch_page(book_link)
-            logging.info(f"[Vivat Parser] Fetching price for book link: {book_link}")
-            if not response_text:
-                logging.warning(
-                    f"[Vivat Parser] No response for book link: {book_link}"
-                )
-                return "Price not available"
-            product_soup = BeautifulSoup(response_text, features="html.parser")
-            price_meta = product_soup.select_one(self.PRICE_SELECTOR)
-            if price_meta and price_meta.get("content"):
-                return f"{price_meta['content']} грн"
-            return "Price not available"
-        except Exception as e:
-            logging.error(
-                f"[Vivat Parser] Error fetching price for book: {e}", exc_info=True
-            )
-            return "Price not available"

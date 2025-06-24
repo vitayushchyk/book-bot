@@ -67,8 +67,10 @@ class SensBookParser(BaseParser, FetchPageMixin):
                 if title and price and link:
                     books.append({"title": title, "price": price, "url": link})
 
-            except AttributeError:
-                logging.warning("[Sens Parser] Skipped a card due to missing data.")
+            except AttributeError as e:
+                logging.warning(
+                    "[Sens Parser] SSkipped a card due to an AttributeError: {e}"
+                )
                 continue
 
         return books

@@ -50,10 +50,7 @@ def get_app():
         mbooks = MegogoBooks(settings.search_url_mbooks)
         fabula = Fabula(settings.search_url_fabula)
         search_manager = BookSearchManager(
-            [
-                ksd,
-                eknygarnya,
-            ],
+            [zhupansky],
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
 

@@ -19,7 +19,7 @@ class YakabooParser(FetchPageMixin, BaseParser):
 
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.base_url}{query.strip()}"
-        logging.info(f"[Yakaboo Parser] Fetching data from URL: {search_url}.")
+        logging.info(f"[Yakaboo Parser] Fetching data from URL: {search_url}")
 
         html_text = await self.fetch_page(search_url)
         if not html_text:

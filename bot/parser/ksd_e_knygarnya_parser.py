@@ -15,22 +15,17 @@ class KSDeKnygarnyaParser(BaseParser, FetchPageMixin):
         try:
             response_text = await self.fetch_page(search_url)
             if not response_text:
-                logging.error(
-                    f"[KSD and EKnygarnya Parser] Failed to fetch data from URL: {search_url}."
-                )
                 return []
 
             data = await self._parse_json(response_text)
             item_groups = data.get("results", {}).get("item_groups", [])
         except Exception as e:
-            logging.error(
-                f"[KSD and EKnygarnya Parser] An error occurred during data fetching: {e}"
-            )
+            logging.error(f"[KSD and EKnygarnya Parser] An error occurred: {e}")
             return []
 
         books = self._parse_books(item_groups)
         logging.info(
-            f"[KSD and EKnygarnya Parser] Successfully parsed {len(books)} books."
+            f"[KSD and EKnygarnya Parser] Successfully parsed {len(books)} books from URL: {search_url}"
         )
         return books
 

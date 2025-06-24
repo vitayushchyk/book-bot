@@ -21,7 +21,7 @@ class OldLionParser(BaseParser, FetchPageMixin):
 
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.api_url}{query.strip()}"
-        logging.info(f"[Old Lion Parser] Fetching data from URL: {search_url}.")
+        logging.info(f"[Old Lion Parser] Fetching data from URL: {search_url}")
         response_text = await self.fetch_page(search_url)
 
         if not response_text:
@@ -46,9 +46,6 @@ class OldLionParser(BaseParser, FetchPageMixin):
             slug = book_item.get("slug")
 
             if not slug:
-                logging.warning(
-                    f"[Old Lion Parser] Skipping book without slug: {book_item}"
-                )
                 continue
 
             url = f"{self.base_url}{slug}"
@@ -110,6 +107,7 @@ class OldLionParser(BaseParser, FetchPageMixin):
                             f"[Old Lion Parser] Error parsing price for {url}: {e}"
                         )
                         continue
+
             books.append(
                 {
                     "title": title,
