@@ -14,15 +14,12 @@ class ReadeatParser(FetchPageMixin, BaseParser):
 
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.api_url}{query.strip()}"
-        logging.info(f"[ Readeat Parser] Fetching data from URL: {search_url}.")
+        logging.info(f"[ Readeat Parser] Fetching data from URL: {search_url}")
 
         try:
             response_text = await self.fetch_page(search_url)
 
             if not response_text:
-                logging.error(
-                    f"[ Readeat Parser] Failed to fetch data from URL: {search_url}."
-                )
                 return []
 
             data = await self._parse_json(response_text)
@@ -33,7 +30,9 @@ class ReadeatParser(FetchPageMixin, BaseParser):
             return []
 
         books = self._parse_books(data.get("products", []))
-        logging.info(f"[ Readeat Parser] Successfully parsed {len(books)} books.")
+        logging.info(
+            f"[ Readeat Parser] Successfully parsed {len(books)} books from URL: {search_url}"
+        )
         return books
 
     def _parse_books(self, products: list) -> List[dict]:

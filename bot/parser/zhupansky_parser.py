@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import List
 
 from bs4 import BeautifulSoup
 
@@ -24,54 +24,29 @@ class ZhupanskyParser(BaseParser, FetchPageMixin):
         }
 
     async def fetch_books_data(self, query: str) -> List[dict]:
+
         params = self.search_params.copy()
         params["s"] = query
 
         try:
-
             base_url = self.base_url
             query_string = "&".join(f"{key}={value}" for key, value in params.items())
             search_url = f"{base_url}?{query_string}"
+            logging.info(f"[Zhupansky Parser] Fetching data from URL: {search_url}")
 
             response_text = await self.fetch_page(search_url)
             if not response_text:
-                logging.warning("[Zhupansky Parser] No response received from server.")
                 return []
-
             data = await self._parse_json(response_text)
             embedded_html = data.get("html", "")
             if not embedded_html:
-                logging.warning(
-                    "[Zhupansky Parser] Field 'html' not found in JSON response."
-                )
                 return []
 
-            soup = BeautifulSoup(embedded_html, features="html.parser")
-            books = soup.select(self.SELECTOR_BOOK)
-
+            books = await self._parse_books(embedded_html)
             logging.info(
-                f"[Zhupansky Parser] Found {len(books)} books in search results."
+                f"[Zhupansky Parser] Successfully parsed {len(books)} books from URL: {search_url}"
             )
-
-            detailed_books = []
-            for book in books:
-                title_el = book.select_one(self.TITLE_SELECTOR)
-                title = title_el.text.strip() if title_el else "Title not available"
-                link = (
-                    title_el["href"]
-                    if title_el and "href" in title_el.attrs
-                    else "Link not available"
-                )
-
-                price = (
-                    await self._fetch_book_price(link)
-                    if link != "Link not available"
-                    else "Price not available"
-                )
-
-                detailed_books.append({"title": title, "link": link, "price": price})
-
-            return detailed_books
+            return books
 
         except Exception as e:
             logging.error(
@@ -79,25 +54,45 @@ class ZhupanskyParser(BaseParser, FetchPageMixin):
             )
             return []
 
-    async def _fetch_book_price(self, book_link: str) -> Optional[str]:
-        try:
-            response_text = await self.fetch_page(book_link)
-            if not response_text:
-                logging.warning(
-                    f"[Zhupansky Parser] No response for book link: {book_link}"
-                )
-                return "Price not available"
-            product_soup = BeautifulSoup(response_text, features="html.parser")
-            price_meta = product_soup.select_one(self.PRICE_META)
-            if price_meta and price_meta.get("content"):
-                return f"{price_meta['content']} грн"
-
-            price_element = product_soup.select_one(self.PRICE_ELEMENT)
-            if price_element:
-                return price_element.text.strip()
-            return "Price not available"
-        except Exception as e:
-            logging.error(
-                f"[Zhupansky Parser] Error fetching price for book: {e}", exc_info=True
+    async def _parse_books(self, html: str) -> List[dict]:
+        soup = BeautifulSoup(html, features="html.parser")
+        book_elements = soup.select(self.SELECTOR_BOOK)
+        books = []
+        for book in book_elements:
+            title_elm = book.select_one(self.TITLE_SELECTOR)
+            title = title_elm.text.strip() if title_elm else None
+            link = (
+                title_elm["href"]
+                if title_elm and "href" in title_elm.attrs
+                else "Link not available"
             )
-            return "Price not available"
+
+            if link != "Link not available":
+                try:
+                    response_text = await self.fetch_page(link)
+                    if response_text:
+                        product_soup = BeautifulSoup(
+                            response_text, features="html.parser"
+                        )
+                        price_meta = product_soup.select_one(self.PRICE_META)
+                        if price_meta and price_meta.get("content"):
+                            price = f"{price_meta['content']}"
+                        else:
+                            price_elm = product_soup.select_one(self.PRICE_ELEMENT)
+                            if price_elm:
+                                price = price_elm.text.strip()
+                            else:
+                                price = 0
+                    else:
+                        price = 0
+                except Exception as e:
+                    logging.error(
+                        f"[Zhupansky Parser] Error fetching price for book: {e}",
+                        exc_info=True,
+                    )
+                    price = 0
+            else:
+                price = 0
+
+            books.append({"title": title, "link": link, "price": price})
+        return books

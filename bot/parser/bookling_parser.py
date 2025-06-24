@@ -15,9 +15,9 @@ class BooklingParser(BaseParser, FetchPageMixin):
     URL_SELECTOR = ".item-title a"
     URL_ATTRIBUTE = "href"
     IN_STOCK_SELECTOR = ".item-stock .value"
+    NOT_AVAILABLE_STATUS = "Немає в наявності"
 
     async def fetch_books_data(self, query: str) -> List[dict]:
-
         search_url = f"{self.base_url}{query.strip()}"
         logging.info(f"[Bookling Parser] Fetching data from URL: {search_url}")
 
@@ -38,12 +38,12 @@ class BooklingParser(BaseParser, FetchPageMixin):
 
         for book in soup.select(self.BOOK_CONTAINER):
             try:
-                availability_element = book.select_one(self.IN_STOCK_SELECTOR)
-                if availability_element:
-                    availability_text = availability_element.get_text(strip=True)
-                    if "Немає в наявності" in availability_text:
-                        logging.debug(
-                            "[Bookling Parser] Skipping book as 'OUT OF STOCK'"
+                is_available_elm = book.select_one(self.IN_STOCK_SELECTOR)
+                if is_available_elm:
+                    is_available_text = is_available_elm.get_text(strip=True)
+                    if self.NOT_AVAILABLE_STATUS in is_available_text:
+                        logging.warning(
+                            "[Bookling Parser] Skipping book as 'NOT AVAILABLE'"
                         )
                         continue
                 title_elm = book.select_one(self.TITLE_SELECTOR)

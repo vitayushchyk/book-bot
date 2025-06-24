@@ -13,10 +13,10 @@ class VivatParser(BaseParser, FetchPageMixin):
 
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.base_url}{query.strip()}"
+        logging.info(f"[Vivat Parser] Fetching data from URL: {search_url}")
         response_text = await self.fetch_page(search_url)
 
         if not response_text:
-            logging.warning("[Vivat Store] No response received from server.")
             return []
 
         try:
@@ -44,13 +44,7 @@ class VivatParser(BaseParser, FetchPageMixin):
         async def fetch_price(book_link: str) -> Optional[str]:
             try:
                 response_text = await self.fetch_page(book_link)
-                logging.info(
-                    f"[Vivat Parser] Fetching price for book link: {book_link}"
-                )
                 if not response_text:
-                    logging.warning(
-                        f"[Vivat Parser] No response for book link: {book_link}"
-                    )
                     return "Price not available"
                 product_soup = BeautifulSoup(response_text, features="html.parser")
                 price_meta = product_soup.select_one(self.PRICE_SELECTOR)
@@ -79,7 +73,7 @@ class VivatParser(BaseParser, FetchPageMixin):
                         if isinstance(sub_item, dict):
 
                             if not sub_item.get("is_presence", True):
-                                logging.info(
+                                logging.warning(
                                     f"[Vivat Parser] Skipping unavailable book: {sub_item.get('name', 'Unknown')}"
                                 )
                                 continue

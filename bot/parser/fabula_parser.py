@@ -14,20 +14,18 @@ class FabulaParser(BaseParser, FetchPageMixin):
     PRICE_SELECTOR = ".product__price"
     URL_ATTRIBUTE = "href"
     IN_STOCK_SELECTOR = ".not-available"
+    STATUS = "Очікується"
 
     async def fetch_books_data(self, query: str) -> List[dict]:
         search_url = f"{self.base_url}{query.strip()}"
-        logging.info(f"[Fabula Parser] Fetching data from URL: {search_url}.")
+        logging.info(f"[Fabula Parser] Fetching data from URL: {search_url}")
         html_text = await self.fetch_page(search_url)
         if not html_text:
-            logging.warning(
-                f"[Fabula Parser] Empty response received for URL: {search_url}."
-            )
             return []
         soup = BeautifulSoup(html_text, features="html.parser")
         books = await self._parse_books(soup)
         logging.info(
-            f"[Fabula Parser] Successfully fetched {len(books)} books from URL: {search_url}."
+            f"[Fabula Parser] Successfully fetched {len(books)} books from URL: {search_url}"
         )
         return books
 
@@ -36,11 +34,13 @@ class FabulaParser(BaseParser, FetchPageMixin):
         for book in soup.select(self.BOOK_CONTAINER):
             try:
 
-                availability_element = book.select_one(self.PRICE_SELECTOR)
-                if availability_element:
-                    availability_text = availability_element.get_text(strip=True)
-                    if "Очікується" in availability_text:
-                        logging.debug("[Fabula Parser] Skipping book as 'OUT OF STOCK'")
+                is_available_elm = book.select_one(self.PRICE_SELECTOR)
+                if is_available_elm:
+                    is_available_text = is_available_elm.get_text(strip=True)
+                    if self.STATUS in is_available_text:
+                        logging.warning(
+                            "[Fabula Parser] Skipping book as 'NOT AVAILABLE'"
+                        )
                         continue
 
                 title_elm = book.select_one(self.TITLE_SELECTOR)
@@ -60,11 +60,16 @@ class FabulaParser(BaseParser, FetchPageMixin):
                 relative_url = url_elem.get(self.URL_ATTRIBUTE) if url_elem else None
                 full_url = f"{relative_url}"
 
+                if not title or not price or not full_url:
+                    logging.warning(
+                        f"[Fabula Parser] Skipped a card due to missing data: {title}, {price}, {full_url}"
+                    )
+                    continue
+
                 books.append({"title": title, "price": price, "url": full_url})
-                logging.info(
-                    f"[Fabula Parser] Parsed book: {title}, Price: {price}, URL: {full_url}"
-                )
             except AttributeError as e:
-                logging.warning(f"[Fabula Parser] Skipped a card due to error: {e}")
+                logging.warning(
+                    f"[Fabula Parser]  Skipped a card due to an AttributeError: {e}"
+                )
                 continue
         return books
