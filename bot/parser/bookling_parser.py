@@ -4,11 +4,10 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.parser.base_parser import BaseParser
 
 
-class BooklingParser(BaseParser, FetchPageMixin):
+class BooklingParser(BaseParser):
     BOOK_CONTAINER = ".item_info.TYPE_1"
     TITLE_SELECTOR = ".item-title a span"
     PRICE_SELECTOR = ".price .price_value"
@@ -17,21 +16,22 @@ class BooklingParser(BaseParser, FetchPageMixin):
     IN_STOCK_SELECTOR = ".item-stock .value"
     NOT_AVAILABLE_STATUS = "Немає в наявності"
 
-    async def fetch_books_data(self, query: str) -> List[dict]:
-        search_url = f"{self.base_url}{query.strip()}"
-        logging.info(f"[Bookling Parser] Fetching data from URL: {search_url}")
+    def __init__(self, base_url: str):
+        super().__init__(base_url=base_url)
 
+    async def fetch_books_data(self, search_url) -> List[dict]:
+        search_url = await self.build_search_url(search_url)
         html_text = await self.fetch_page(search_url)
         if not html_text:
             return []
 
-        soup = BeautifulSoup(html_text, features="html.parser")
-        books = await self._parse_books(soup)
+        soup = await self.parse_html_use_soup(html_text)
+        pars_data = await self._parse_books(soup)
 
-        logging.info(
-            f"[Bookling Parser] Successfully fetched {len(books)} books from URL: {search_url}"
-        )
-        return books
+        logging.info(f"[Bookling Parser] Fetched {len(pars_data)}")
+        for book in pars_data:
+            logging.info(f"[Bookling Parser] Book: {book}")
+        return pars_data
 
     async def _parse_books(self, soup: BeautifulSoup) -> List[dict]:
         books = []

@@ -15,7 +15,6 @@ async def start_search_book_handler(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE = None,
 ):
-    logging.info("Starting the book search interaction.")
     await update.message.reply_text(
         text="`✨Йо, шукач✨`\n"
         "`Введи назву книги, котру хочеш знайти 📚`\n"
