@@ -8,14 +8,12 @@ class KSDeKnygarnyaParser(BaseParser):
     def __init__(self, base_url: str):
         super().__init__(base_url=base_url)
 
-    async def fetch_books_data(self, search_url) -> List[dict]:
-        search_url = await self.build_search_url(search_url)
+    async def fetch_books_data(self, query: str) -> List[dict]:
+        search_url = await self.build_search_url(query=query)
         try:
-            await self.fetch_page(search_url)
-            response_text = await self.fetch_page(search_url)
-            if not response_text:
+            if not (res_text := await self.fetch_page(search_url)):
                 return []
-            data = await self._parse_json(response_text)
+            data = await self._parse_json(res_text)
             item_groups = data.get("results", {}).get("item_groups", [])
         except Exception as e:
             logging.error(f"[KSD and EKnygarnya Parser] An error occurred: {e}")

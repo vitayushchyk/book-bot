@@ -24,15 +24,14 @@ class ZhupanskyParser(BaseParser):
         try:
             search_url = await self.build_search_url(query)
 
-            response_text = await self.fetch_page(search_url)
-            if not response_text:
+            if not (res_text := await self.fetch_page(search_url)):
                 return []
-            data = await self._parse_json(response_text)
-            embedded_html = data.get("html", "")
-            if not embedded_html:
+            data = await self._parse_json(res_text)
+            html_text = data.get("html", "")
+            if not html_text:
                 return []
 
-            books = await self._parse_books(embedded_html)
+            books = await self._parse_books(html_text)
             logging.info(f"[Zhupansky Parser] Successfully parsed {len(books)}")
             for book in books:
                 logging.info(f"[Zhupansky Parser] Fetched {book}")
@@ -40,7 +39,7 @@ class ZhupanskyParser(BaseParser):
 
         except Exception as e:
             logging.error(
-                f"[Zhupansky Parser] Error while fetching books: {e}", exc_info=True
+                msg=f"[Zhupansky Parser] Error while fetching books: {e}", exc_info=True
             )
             return []
 
@@ -77,7 +76,7 @@ class ZhupanskyParser(BaseParser):
                         price = 0
                 except Exception as e:
                     logging.error(
-                        f"[Zhupansky Parser] Error fetching price for book: {e}",
+                        msg=f"[Zhupansky Parser] Error fetching price for book: {e}",
                         exc_info=True,
                     )
                     price = 0

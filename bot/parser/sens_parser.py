@@ -21,14 +21,11 @@ class SensBookParser(BaseParser):
     LINK_ATTRIBUTE = "href"
     LINK_PARENT_CLASS = "catalogCard-title"
 
-    async def fetch_books_data(self, search_url) -> List[dict]:
-        search_url = await self.build_search_url(search_url)
-        logging.info(f"[Sens Parser] Fetching data from URL: {search_url}.")
+    async def fetch_books_data(self, query: str) -> List[dict]:
+        search_url = await self.build_search_url(query=query)
 
-        html_text = await self.fetch_page(search_url)
-        if not html_text:
+        if not (html_text := await self.fetch_page(search_url)):
             return []
-
         soup = await self.parse_html_use_soup(html_text)
         pars_data = await self._parse_books(soup)
         logging.info(f"[Sens Parser] Successfully fetched {len(pars_data)}")
@@ -64,13 +61,20 @@ class SensBookParser(BaseParser):
                     if link_elm
                     else None
                 )
-
-                if title and price and link:
-                    books.append({"title": title, "price": price, "url": link})
+                if not title or not price or not link:
+                    logging.warning(
+                        f"[Sens Parser] Skipped a card due to missing data: {title}, {price}, {link}"
+                    )
+                    continue
+                if not title or not price or not link:
+                    logging.warning(
+                        f"[Sens Parser] Skipped a card due to missing data: {title}, {price}, {link}"
+                    )
+                books.append({"title": title, "price": price, "url": link})
 
             except AttributeError as e:
                 logging.warning(
-                    "[Sens Parser] SSkipped a card due to an AttributeError: {e}"
+                    f"[Sens Parser] SSkipped a card due to an AttributeError: {e}"
                 )
                 continue
 

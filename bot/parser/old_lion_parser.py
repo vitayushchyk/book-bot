@@ -17,15 +17,13 @@ class OldLionParser(BaseParser):
     IN_STOCK_CONTAINER = "div.product-page__status"
     NOT_AVAILABLE_STATUSES = ["Тираж закінчився", "Тимчасово відсутня"]
 
-    async def fetch_books_data(self, search_url) -> List[dict]:
-        search_url = await self.build_search_url(search_url)
-        response_text = await self.fetch_page(search_url)
-
-        if not response_text:
+    async def fetch_books_data(self, query: str) -> List[dict]:
+        search_url = await self.build_search_url(query=query)
+        if not (res_text := await self.fetch_page(search_url)):
             return []
 
         try:
-            data = await self._parse_json(response_text)
+            data = await self._parse_json(res_text)
             results = data.get("data", [])
         except Exception as e:
             logging.error(f"[Old Lion Parser] Error parsing data: {e}")

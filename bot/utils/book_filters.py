@@ -1,27 +1,7 @@
-import logging
 import re
 from difflib import SequenceMatcher
-from typing import Dict, List, Optional
 
-
-def log_books_short(books, note=None):
-    """
-    Logs the list of books in short format: - title | price | url/link (first available)
-    :param books: List of books
-    :param note: Optional descriptive note for the log entry
-    """
-    if books:
-        books_list = "\n".join(
-            [
-                f"- {book.get('title')} | {book.get('price')} | {book.get('url') or book.get('link', '')}"
-                for book in books
-            ]
-        )
-        head = f"{note}\n" if note else ""
-        logging.info(f"{head}{books_list}")
-    else:
-        msg = f"{note}: " if note else ""
-        logging.info(f"{msg}no books found.")
+from bot.utils.log_maker import LogMaker
 
 
 async def _normalize_title_text(text):
@@ -35,8 +15,9 @@ async def filter_books_by_exact_match(books, search_query):
         for book in books
         if normalized_query in await _normalize_title_text(book["title"])
     ]
-    log_books_short(
-        filtered_books, note=f"Filtered books by exact match ({len(filtered_books)})"
+    await LogMaker.log_books_pretty(
+        filtered_books,
+        description=f"Filtered books by exact match ({len(filtered_books)})",
     )
     return filtered_books
 
@@ -45,9 +26,9 @@ async def is_similar(title, query):
     normalized_title = await _normalize_title_text(title)
     normalized_query = await _normalize_title_text(query)
     similarity = SequenceMatcher(None, normalized_title, normalized_query).ratio()
-    log_books_short(
-        [{"title": title, "similarity": similarity}],
-        note=f"Similarity of '{title}' with '{query}': {similarity}",
+    await LogMaker.log_books_pretty(
+        books=[{"title": title, "similarity": similarity}],
+        description=f"Similarity of '{title}' with '{query}': {similarity}",
     )
 
     return similarity > 0.7
@@ -57,8 +38,9 @@ async def filter_books_by_similarity(books, search_query):
     filtered_books = [
         book for book in books if await is_similar(book["title"], search_query)
     ]
-    log_books_short(
-        filtered_books, note=f"Filtered books by similarity ({len(filtered_books)})"
+    await LogMaker.log_books_pretty(
+        filtered_books,
+        description=f"Filtered books by similarity ({len(filtered_books)})",
     )
     return filtered_books
 
@@ -79,7 +61,9 @@ async def sort_books_by_relevance(books, search_query):
         ).ratio(),
         reverse=True,
     )
-    log_books_short(result, note=f"Sorted books by relevance ({len(result)})")
+    await LogMaker.log_books_pretty(
+        result, description=f"Sorted books by relevance ({len(result)})"
+    )
     return result
 
 
@@ -94,7 +78,8 @@ async def sort_books_by_price(books):
         {**book, "normalized_price": await _normalize_price(book["price"])}
         for book in books
     ]
-    log_books_short(
-        books_with_prices, note=f"Sorted books by price ({len(books_with_prices)})"
+    await LogMaker.log_books_pretty(
+        books_with_prices,
+        description=f"Sorted books by price ({len(books_with_prices)})",
     )
     return sorted(books_with_prices, key=lambda book: book["normalized_price"])

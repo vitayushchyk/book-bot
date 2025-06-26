@@ -19,12 +19,10 @@ class YakabooParser(BaseParser):
     def __init__(self, base_url: str):
         super().__init__(base_url=base_url)
 
-    async def fetch_books_data(self, search_url) -> List[dict]:
-        search_url = await self.build_search_url(search_url)
-        logging.info(f"[Yakaboo Parser] Fetching data from URL: {search_url}")
+    async def fetch_books_data(self, query: str) -> List[dict]:
+        search_url = await self.build_search_url(query=query)
 
-        html_text = await self.fetch_page(search_url)
-        if not html_text:
+        if not (html_text := await self.fetch_page(search_url)):
             return []
 
         soup = await self.parse_html_use_soup(html_text)
@@ -51,15 +49,19 @@ class YakabooParser(BaseParser):
                     price_elm = book.select_one(self.PRICE_SELECTOR)
                     price = price_elm.get_text(strip=True) if price_elm else None
 
-                url_element = book.select_one(self.URL_SELECTOR)
+                url_elem = book.select_one(self.URL_SELECTOR)
                 url = (
-                    urljoin(self.base_url, url_element[self.URL_ATTRIBUTE])
-                    if url_element and self.URL_ATTRIBUTE in url_element.attrs
+                    urljoin(self.base_url, url_elem[self.URL_ATTRIBUTE])
+                    if url_elem and self.URL_ATTRIBUTE in url_elem.attrs
                     else None
                 )
+                if not title or not price or not url:
+                    logging.warning(
+                        f"[Yakaboo Parser] Skipped a card due to missing data: {title}, {price}, {url}"
+                    )
+                    continue
 
-                if title and price and url:
-                    books.append({"title": title, "price": price, "url": url})
+                books.append({"title": title, "price": price, "url": url})
 
             except AttributeError:
                 logging.warning("[Yakaboo Parser] Skipped a card due to missing data.")

@@ -19,12 +19,11 @@ class BooklingParser(BaseParser):
     def __init__(self, base_url: str):
         super().__init__(base_url=base_url)
 
-    async def fetch_books_data(self, search_url) -> List[dict]:
-        search_url = await self.build_search_url(search_url)
-        html_text = await self.fetch_page(search_url)
-        if not html_text:
-            return []
+    async def fetch_books_data(self, query: str) -> List[dict]:
+        search_url = await self.build_search_url(query=query)
 
+        if not (html_text := await self.fetch_page(search_url)):
+            return []
         soup = await self.parse_html_use_soup(html_text)
         pars_data = await self._parse_books(soup)
 

@@ -13,18 +13,13 @@ class VivatParser(BaseParser):
     def __init__(self, base_url: str):
         super().__init__(base_url=base_url)
 
-    async def fetch_books_data(self, search_url) -> List[dict]:
-        search_url = await self.build_search_url(search_url)
-        response_text = await self.fetch_page(search_url)
-
-        if not response_text:
+    async def fetch_books_data(self, query: str) -> List[dict]:
+        search_url = await self.build_search_url(query=query)
+        if not (res_text := await self.fetch_page(search_url)):
             return []
 
         try:
-            data = await self._parse_json(response_text)
-            logging.info(f"[Vivat Parser] Fetched {len(data)}")
-            for book in data:
-                logging.info(f"[Vivat Parser] Fetched {book}")
+            data = await self._parse_json(res_text)
             if not data:
                 return []
         except Exception as e:
@@ -57,7 +52,7 @@ class VivatParser(BaseParser):
                 return "Price not available"
             except Exception as e:
                 logging.error(
-                    f"[Vivat Parser] Error fetching price for book: {e}",
+                    msg="[Vivat Parser] Error fetching price for book: {e}",
                     exc_info=True,
                 )
                 return "Price not available"

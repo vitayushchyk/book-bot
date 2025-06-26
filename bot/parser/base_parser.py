@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any, List, Optional
+from typing import Optional
 from urllib.parse import urlencode
 
 from bs4 import BeautifulSoup
@@ -51,15 +51,16 @@ class BaseParser:
             logging.error(f"[{self.__class__.__name__}] Error fetching page: {e}")
             return []
 
-    @staticmethod
-    async def _parse_json(response_text: Optional[str]) -> Optional[dict]:
+    async def _parse_json(self, response_text: Optional[str]) -> Optional[dict]:
         """Parse the JSON response text"""
         if response_text is None:
             return None
         try:
             return json.loads(response_text)
         except json.JSONDecodeError:
-            logging.error("Failed to decode JSON from response text.")
+            logging.error(
+                f"Failed to decode JSON from response text {self.__class__.__name__}"
+            )
             return None
 
     async def parse_html_use_soup(self, html_text: str) -> BeautifulSoup:
@@ -71,8 +72,7 @@ class BaseParser:
 
         return result
 
-    @staticmethod
-    def _add_book(item: dict, books: list):
+    def _add_book(self, item: dict, books: list):
         title = item.get("name")
         price = item.get("price")
         url = item.get("url")
