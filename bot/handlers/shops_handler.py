@@ -15,7 +15,6 @@ async def start_search_book_handler(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE = None,
 ):
-    logging.info("Starting the book search interaction.")
     await update.message.reply_text(
         text="`✨Йо, шукач✨`\n"
         "`Введи назву книги, котру хочеш знайти 📚`\n"
@@ -78,9 +77,9 @@ async def book_name_handle(
 
                 cheapest_book_response = (
                     f"`🔥 УРВАТЬ НАЙДЕШЕВШУ 🔥`\n\n"
-                    f"📝`Шо по назві?` {escaped_title}\n"
-                    f"💸 `Шо по чом?` {escaped_price}\n"
                     f"🛒 `Де шукать?` {escaped_shop}\n"
+                    f"💸 `Шо по чом?` {escaped_price}\n"
+                    f"📝`Шо по назві?` {escaped_title}\n"
                     f"[🚀 Гоу за нею]({escaped_link})\n\n"
                     f"`🔵🟡🔵🟡🔵`\n\n"
                 )

@@ -1,6 +1,7 @@
-import logging
 import re
 from difflib import SequenceMatcher
+
+from bot.utils.log_maker import LogMaker
 
 
 async def _normalize_title_text(text):
@@ -14,7 +15,10 @@ async def filter_books_by_exact_match(books, search_query):
         for book in books
         if normalized_query in await _normalize_title_text(book["title"])
     ]
-    logging.info(f"Filtered books by exact match: {filtered_books}")
+    await LogMaker.log_books_pretty(
+        filtered_books,
+        description=f"Filtered books by exact match ({len(filtered_books)})",
+    )
     return filtered_books
 
 
@@ -22,7 +26,11 @@ async def is_similar(title, query):
     normalized_title = await _normalize_title_text(title)
     normalized_query = await _normalize_title_text(query)
     similarity = SequenceMatcher(None, normalized_title, normalized_query).ratio()
-    logging.info(f"Similarity between '{title}' and '{query}': {similarity}")
+    await LogMaker.log_books_pretty(
+        books=[{"title": title, "similarity": similarity}],
+        description=f"Similarity of '{title}' with '{query}': {similarity}",
+    )
+
     return similarity > 0.7
 
 
@@ -30,7 +38,10 @@ async def filter_books_by_similarity(books, search_query):
     filtered_books = [
         book for book in books if await is_similar(book["title"], search_query)
     ]
-    logging.info(f"Filtered books by similarity: {filtered_books}")
+    await LogMaker.log_books_pretty(
+        filtered_books,
+        description=f"Filtered books by similarity ({len(filtered_books)})",
+    )
     return filtered_books
 
 
@@ -50,7 +61,9 @@ async def sort_books_by_relevance(books, search_query):
         ).ratio(),
         reverse=True,
     )
-    logging.info(f"Sorted books by relevance: {result}")
+    await LogMaker.log_books_pretty(
+        result, description=f"Sorted books by relevance ({len(result)})"
+    )
     return result
 
 
@@ -65,5 +78,8 @@ async def sort_books_by_price(books):
         {**book, "normalized_price": await _normalize_price(book["price"])}
         for book in books
     ]
-    logging.info(f"Books with normalized prices: {books_with_prices}")
+    await LogMaker.log_books_pretty(
+        books_with_prices,
+        description=f"Sorted books by price ({len(books_with_prices)})",
+    )
     return sorted(books_with_prices, key=lambda book: book["normalized_price"])

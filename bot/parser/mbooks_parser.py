@@ -3,12 +3,11 @@ from typing import List
 
 from bs4 import BeautifulSoup
 
-from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.core.config import settings
 from bot.parser.base_parser import BaseParser
 
 
-class MegogoBooksParser(BaseParser, FetchPageMixin):
+class MegogoBooksParser(BaseParser):
     BOOK_CONTAINER = ".product-wrapper"
     TITLE_ELEMENT = "a"
     PRICE_ELEMENT = '[data-testid="currentPrice"]'
@@ -16,18 +15,20 @@ class MegogoBooksParser(BaseParser, FetchPageMixin):
     URL_ATTRIBUTE = "href"
     BASE_URL = settings.base_url_mbooks
 
+    def __init__(self, base_url: str):
+        super().__init__(base_url=base_url)
+
     async def fetch_books_data(self, query: str) -> List[dict]:
-        search_url = f"{self.base_url}{query.strip()}"
-        logging.info(f"[Megogo Parser] Fetching data from URL: {search_url}")
-        html_text = await self.fetch_page(search_url)
-        if not html_text:
+        search_url = await self.build_search_url(query=query)
+
+        if not (html_text := await self.fetch_page(search_url)):
             return []
-        soup = BeautifulSoup(html_text, features="html.parser")
-        books = await self._parse_books(soup)
-        logging.info(
-            f"[Megogo Parser] Successfully fetched {len(books)} books from URL: {search_url}"
-        )
-        return books
+        soup = await self.parse_html_use_soup(html_text)
+        pars_data = await self._parse_books(soup)
+        logging.info(f"[Megogo Parser] Fetched {len(pars_data)}")
+        for book in pars_data:
+            logging.info(f"[Megogo Parser] Book: {book}")
+        return pars_data
 
     async def _parse_books(self, soup: BeautifulSoup) -> List[dict]:
         books = []

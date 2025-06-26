@@ -4,23 +4,22 @@ from typing import List, Optional
 
 from bs4 import BeautifulSoup
 
-from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.parser.base_parser import BaseParser
 
 
-class VivatParser(BaseParser, FetchPageMixin):
+class VivatParser(BaseParser):
     PRICE_SELECTOR = "meta[property='product:price:amount'][content]"
 
-    async def fetch_books_data(self, query: str) -> List[dict]:
-        search_url = f"{self.base_url}{query.strip()}"
-        logging.info(f"[Vivat Parser] Fetching data from URL: {search_url}")
-        response_text = await self.fetch_page(search_url)
+    def __init__(self, base_url: str):
+        super().__init__(base_url=base_url)
 
-        if not response_text:
+    async def fetch_books_data(self, query: str) -> List[dict]:
+        search_url = await self.build_search_url(query=query)
+        if not (res_text := await self.fetch_page(search_url)):
             return []
 
         try:
-            data = await self._parse_json(response_text)
+            data = await self._parse_json(res_text)
             if not data:
                 return []
         except Exception as e:
@@ -53,7 +52,7 @@ class VivatParser(BaseParser, FetchPageMixin):
                 return "Price not available"
             except Exception as e:
                 logging.error(
-                    f"[Vivat Parser] Error fetching price for book: {e}",
+                    msg="[Vivat Parser] Error fetching price for book: {e}",
                     exc_info=True,
                 )
                 return "Price not available"

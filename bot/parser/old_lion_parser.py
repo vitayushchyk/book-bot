@@ -3,15 +3,13 @@ from typing import List
 
 from bs4 import BeautifulSoup
 
-from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.core.config import settings
 from bot.parser.base_parser import BaseParser
 
 
-class OldLionParser(BaseParser, FetchPageMixin):
+class OldLionParser(BaseParser):
     def __init__(self, base_url):
-        super().__init__(base_url=base_url)
-        self.api_url = settings.api_search_url_old_lion
+        super().__init__(base_url=base_url, api_url=settings.api_search_url_old_lion)
 
     PRICE_PARENT_TAG = "div"
     BASE_PRICE_CONTAINER = "ProductCard_price__6Et_j"
@@ -20,15 +18,12 @@ class OldLionParser(BaseParser, FetchPageMixin):
     NOT_AVAILABLE_STATUSES = ["Тираж закінчився", "Тимчасово відсутня"]
 
     async def fetch_books_data(self, query: str) -> List[dict]:
-        search_url = f"{self.api_url}{query.strip()}"
-        logging.info(f"[Old Lion Parser] Fetching data from URL: {search_url}")
-        response_text = await self.fetch_page(search_url)
-
-        if not response_text:
+        search_url = await self.build_search_url(query=query)
+        if not (res_text := await self.fetch_page(search_url)):
             return []
 
         try:
-            data = await self._parse_json(response_text)
+            data = await self._parse_json(res_text)
             results = data.get("data", [])
         except Exception as e:
             logging.error(f"[Old Lion Parser] Error parsing data: {e}")
@@ -36,6 +31,8 @@ class OldLionParser(BaseParser, FetchPageMixin):
 
         books = await self._parse_books(results)
         logging.info(f"[Old Lion Parser] Successfully fetched {len(books)} books.")
+        for book in books:
+            logging.info(f"[[Old Lion Parser] Fetched {book}")
         return books
 
     async def _parse_books(self, results: list) -> List[dict]:

@@ -4,11 +4,10 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from bot.base.base_fetch_page_mixin import FetchPageMixin
 from bot.parser.base_parser import BaseParser
 
 
-class YakabooParser(FetchPageMixin, BaseParser):
+class YakabooParser(BaseParser):
 
     BOOK_CONTAINER = "div.category-card"
     TITLE_SELECTOR = "a.ui-card-title.category-card__name"
@@ -17,20 +16,21 @@ class YakabooParser(FetchPageMixin, BaseParser):
     URL_SELECTOR = "a.category-card__image"
     URL_ATTRIBUTE = "href"
 
-    async def fetch_books_data(self, query: str) -> List[dict]:
-        search_url = f"{self.base_url}{query.strip()}"
-        logging.info(f"[Yakaboo Parser] Fetching data from URL: {search_url}")
+    def __init__(self, base_url: str):
+        super().__init__(base_url=base_url)
 
-        html_text = await self.fetch_page(search_url)
-        if not html_text:
+    async def fetch_books_data(self, query: str) -> List[dict]:
+        search_url = await self.build_search_url(query=query)
+
+        if not (html_text := await self.fetch_page(search_url)):
             return []
 
-        soup = BeautifulSoup(html_text, features="html.parser")
-        books = await self._parse_books(soup)
-        logging.info(
-            f"[Yakaboo Parser] Successfully fetched {len(books)} books from URL: {search_url}."
-        )
-        return books
+        soup = await self.parse_html_use_soup(html_text)
+        pars_data = await self._parse_books(soup)
+        logging.info(f"[Yakaboo Parser] Successfully fetched {len(pars_data)}")
+        for book in pars_data:
+            logging.info(f"[Yakaboo Parser] Fetched {book}")
+        return pars_data
 
     async def _parse_books(self, soup: BeautifulSoup) -> list:
         books = []
@@ -49,15 +49,19 @@ class YakabooParser(FetchPageMixin, BaseParser):
                     price_elm = book.select_one(self.PRICE_SELECTOR)
                     price = price_elm.get_text(strip=True) if price_elm else None
 
-                url_element = book.select_one(self.URL_SELECTOR)
+                url_elem = book.select_one(self.URL_SELECTOR)
                 url = (
-                    urljoin(self.base_url, url_element[self.URL_ATTRIBUTE])
-                    if url_element and self.URL_ATTRIBUTE in url_element.attrs
+                    urljoin(self.base_url, url_elem[self.URL_ATTRIBUTE])
+                    if url_elem and self.URL_ATTRIBUTE in url_elem.attrs
                     else None
                 )
+                if not title or not price or not url:
+                    logging.warning(
+                        f"[Yakaboo Parser] Skipped a card due to missing data: {title}, {price}, {url}"
+                    )
+                    continue
 
-                if title and price and url:
-                    books.append({"title": title, "price": price, "url": url})
+                books.append({"title": title, "price": price, "url": url})
 
             except AttributeError:
                 logging.warning("[Yakaboo Parser] Skipped a card due to missing data.")
