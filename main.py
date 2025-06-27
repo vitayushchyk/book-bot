@@ -2,13 +2,12 @@ import logging
 
 from telegram.ext import (
     ApplicationBuilder,
-    CallbackQueryHandler,
     CommandHandler,
     ConversationHandler,
     MessageHandler,
     filters,
 )
-from websocket import frame_buffer
+
 
 from bot.core.config import settings
 from bot.handlers.shops_handler import (
@@ -98,6 +97,7 @@ def get_app():
         app.run_polling()
 
     except Exception as e:
+
         logging.error(f"Error occurred while initializing the bot: {e}", exc_info=True)
 
 
