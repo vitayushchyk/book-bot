@@ -98,6 +98,7 @@ def get_app():
         app.run_polling()
 
     except Exception as e:
+
         logging.error(f"Error occurred while initializing the bot: {e}", exc_info=True)
 
 
