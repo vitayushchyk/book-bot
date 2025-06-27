@@ -2,13 +2,12 @@ import logging
 
 from telegram.ext import (
     ApplicationBuilder,
-    CallbackQueryHandler,
     CommandHandler,
     ConversationHandler,
     MessageHandler,
     filters,
 )
-from websocket import frame_buffer
+
 
 from bot.core.config import settings
 from bot.handlers.shops_handler import (

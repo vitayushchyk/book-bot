@@ -141,7 +141,7 @@ async def book_name_handle(
         await update.message.reply_text(
             text=f"`пу ПУ пу 🚨`\n\n"
             f"`Мабуть, розробниця переплутала код із чашкою капуча 🍺`\n"
-            f"`Наступний трай давай пізніше🙏`",
+            f"`Наступний трай краще пізніше 🙏`",
             parse_mode="Markdown",
         )
 
@@ -158,7 +158,7 @@ async def cancel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE = No
     logging.info("User canceled the book search.")
     await update.message.reply_text(
         text="`ОХРАНА - ОТМЄНА 👌`\n\n"
-        f"`Якщо передумаєш — 🧚 завжди тут, як Wi-Fi сусіда 📡`",
+        f"`Передумав? Пінгуй, 🧚 завжди тут, як Wi-Fi сусіда 📡`",
         parse_mode="Markdown",
     )
     return ConversationHandler.END
