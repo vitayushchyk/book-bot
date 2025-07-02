@@ -8,12 +8,16 @@ from telegram.ext import (
     filters,
 )
 
-
 from bot.core.config import settings
+from bot.handlers.cancel_handler import cancel_handler
+from bot.handlers.rating_handler import (
+    WAITING_FOR_BOOK_NAME,
+    book_rating,
+    infi_rating_handler,
+)
 from bot.handlers.shops_handler import (
     NAME_BOOK,
     book_name_handle,
-    cancel_handler,
     start_search_book_handler,
 )
 from bot.handlers.start_handler import start
@@ -66,6 +70,16 @@ def get_app():
         app = ApplicationBuilder().token(settings.bot_token).build()
 
         app.add_handler(CommandHandler("start", start))
+        infi_rating_conv = ConversationHandler(
+            entry_points=[CommandHandler("rating", book_rating)],
+            states={
+                WAITING_FOR_BOOK_NAME: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, infi_rating_handler)
+                ]
+            },
+            fallbacks=[CommandHandler("cancel", cancel_handler)],
+        )
+        app.add_handler(infi_rating_conv)
 
         find_book_handler = ConversationHandler(
             entry_points=[

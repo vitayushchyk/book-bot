@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     search_url_mbooks: str
     base_url_mbooks: str
     search_url_fabula: str
+    google_book_api_key: str
+    google_rating: str
 
     log_level: str = "INFO"
 

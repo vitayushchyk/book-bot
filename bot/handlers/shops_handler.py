@@ -1,6 +1,5 @@
 import logging
 
-from sqlalchemy.testing.suite.test_reflection import users
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 from telegram.helpers import escape_markdown
@@ -19,7 +18,7 @@ async def start_search_book_handler(
     user = update.effective_user
     await update.message.reply_text(
         text=f"`✨Ready? ✨`\n\n"
-        "`Дропай тайтл і 🧚🏻‍ погнала шукати`\n"
+        "`Дропай тайтл і 🦛💨‍ погнав шукати`\n"
         "`Передумав - без драми 👉` /cancel 🚪",
         parse_mode="Markdown",
     )
@@ -34,7 +33,7 @@ async def book_name_handle(
     book_name = update.message.text
     logging.info(f"Received a book name from user: {book_name}")
     await update.message.reply_text(
-        text=f"`Wait a sec, зловила твій запит на: '{book_name}' 👾` \n"
+        text=f"`Wait a sec, зловив твій запит на: '{book_name}' 👾` \n"
         f"`Розганаю сервери до максималок, 9 чи 10 сек для рейда нада 💁‍♀️`",
         parse_mode="Markdown",
     )
@@ -132,7 +131,7 @@ async def book_name_handle(
             logging.warning(f"No books found for the query: '{book_name}'")
             await update.message.reply_text(
                 text="`Воу-воу, стоПЕ`\n\n"
-                f"`Книга з назвою` *'{book_name}'* `настільки ексклюзивна, що навіть гугл не знає 📚`\n\n"
+                f"`Книга з назвою` '{book_name}' `настільки ексклюзивна, що навіть гугл не знає 📚`\n\n"
                 f"`BTW, чекни правопис, чи може щось інше чекнеш ?  👉👈`",
                 parse_mode="Markdown",
             )
@@ -146,19 +145,9 @@ async def book_name_handle(
         )
 
     await update.message.reply_text(
-        text="`️Книжкова фея ще в ділі 🧚`\n\n"
+        text="`Hippo bookSter ще в ділі 🦛`\n\n"
         "`Від тебе — тайтл, від мене — рейд 🪄`\n"
         "`Якщо передумав — 👉` /cancel 🚪",
         parse_mode="Markdown",
     )
     return NAME_BOOK
-
-
-async def cancel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE = None):
-    logging.info("User canceled the book search.")
-    await update.message.reply_text(
-        text="`ОХРАНА - ОТМЄНА 👌`\n\n"
-        f"`Передумав? Пінгуй, 🧚 завжди тут, як Wi-Fi сусіда 📡`",
-        parse_mode="Markdown",
-    )
-    return ConversationHandler.END
