@@ -11,7 +11,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         f"`Тут все, що моя розробниця навчила мене робити 🫦`\n\n"
         f"`🔹 Шукати книги по гарячим прайсам — тиць 👉` /findbook\n"
         f"`🔹 Шукати рейтинг книги — тиць 👉` /rating\n"
-        f"`🔹 Писати хороші і погані слова тиць 👉` /comment"
-        f"`🔹 Передумав? Без драми — тиць 👉` /cancel\n",
+        f"`🔹 Писати хороші і погані слова тиць 👉` /comment\n",
         parse_mode="Markdown",
     )

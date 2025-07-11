@@ -17,7 +17,7 @@ from bot.handlers.shops_handler import (
     start_search_book_handler,
 )
 from bot.handlers.start_handler import start
-from bot.handlers.user_comment import comment_handler
+from bot.handlers.user_comment_handler import comment_handler
 from bot.manager.bookling import Bookling
 from bot.manager.e_knygarnya import EKnygarnya
 from bot.manager.fabula import Fabula
@@ -66,10 +66,6 @@ def get_app():
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
 
-        app.add_handler(CommandHandler("start", start))
-        app.add_handler(rating_handler)
-        app.add_handler(comment_handler)
-
         find_book_handler = ConversationHandler(
             entry_points=[
                 CommandHandler(
@@ -91,16 +87,19 @@ def get_app():
             },
             fallbacks=[
                 CommandHandler("cancel", cancel_handler),
+                CommandHandler("start", start),
             ],
         )
+        app.add_handler(rating_handler)
+        app.add_handler(comment_handler)
         app.add_handler(find_book_handler)
+        app.add_handler(CommandHandler("start", start))
 
         logging.info("Bot initialized successfully.")
 
         app.run_polling()
 
     except Exception as e:
-
         logging.error(f"Error occurred while initializing the bot: {e}", exc_info=True)
 
 
