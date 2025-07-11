@@ -26,6 +26,7 @@ alembic = "^1.15.2"
 psycopg2-binary = "^2.9.10"
 asyncpg = "^0.30.0"
 watchdog = "^6.0.0"
+sqlalchemy = "^2.0.41"
 
 
 

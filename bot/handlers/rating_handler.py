@@ -1,7 +1,11 @@
-import logging
-
 from telegram import Update
-from telegram.ext import ContextTypes
+from telegram.ext import (
+    CommandHandler,
+    ContextTypes,
+    ConversationHandler,
+    MessageHandler,
+    filters,
+)
 
 from bot.core.config import settings
 from bot.servis.ratting_books import RattingBooks
@@ -22,7 +26,7 @@ async def book_rating(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def infi_rating_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logging.warning("Test log: infi_rating_handler called")
+
     query = update.message.text.strip()
     result = await GOOGLE_BOOKS_CLIENT.search_book(query)
     if result:
@@ -40,3 +44,14 @@ async def infi_rating_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         )
 
     await update.message.reply_text(message, parse_mode="Markdown")
+
+
+rating_handler = ConversationHandler(
+    entry_points=[CommandHandler("rating", book_rating)],
+    states={
+        WAITING_FOR_BOOK_NAME: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, infi_rating_handler)
+        ],
+    },
+    fallbacks=[],
+)
