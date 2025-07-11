@@ -1,7 +1,14 @@
 import logging
 
 from telegram import Update
-from telegram.ext import ContextTypes, ConversationHandler
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    ContextTypes,
+    ConversationHandler,
+    MessageHandler,
+    filters,
+)
 from telegram.helpers import escape_markdown
 
 from bot.processor.search_manager import BookSearchManager
@@ -34,7 +41,7 @@ async def book_name_handle(
     logging.info(f"Received a book name from user: {book_name}")
     await update.message.reply_text(
         text=f"`Wait a sec, зловив твій запит на: '{book_name}' 👾` \n"
-        f"`Розганаю сервери до максималок, 9 чи 10 сек для рейда нада 💁‍♀️`",
+        f"`Розганаю сервери до максималок, 9 чи 10 сек для рейда нада 💃️`",
         parse_mode="Markdown",
     )
     try:
@@ -145,7 +152,7 @@ async def book_name_handle(
         )
 
     await update.message.reply_text(
-        text="`Hippo bookSter ще в ділі 🦛`\n\n"
+        text="`Hippo bookSter ще в ділі 🦛💨`\n\n"
         "`Від тебе — тайтл, від мене — рейд 🪄`\n"
         "`Якщо передумав — 👉` /cancel 🚪",
         parse_mode="Markdown",

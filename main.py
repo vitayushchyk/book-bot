@@ -10,17 +10,14 @@ from telegram.ext import (
 
 from bot.core.config import settings
 from bot.handlers.cancel_handler import cancel_handler
-from bot.handlers.rating_handler import (
-    WAITING_FOR_BOOK_NAME,
-    book_rating,
-    infi_rating_handler,
-)
+from bot.handlers.rating_handler import rating_handler
 from bot.handlers.shops_handler import (
     NAME_BOOK,
     book_name_handle,
     start_search_book_handler,
 )
 from bot.handlers.start_handler import start
+from bot.handlers.user_comment_handler import comment_handler
 from bot.manager.bookling import Bookling
 from bot.manager.e_knygarnya import EKnygarnya
 from bot.manager.fabula import Fabula
@@ -69,18 +66,6 @@ def get_app():
         )
         app = ApplicationBuilder().token(settings.bot_token).build()
 
-        app.add_handler(CommandHandler("start", start))
-        infi_rating_conv = ConversationHandler(
-            entry_points=[CommandHandler("rating", book_rating)],
-            states={
-                WAITING_FOR_BOOK_NAME: [
-                    MessageHandler(filters.TEXT & ~filters.COMMAND, infi_rating_handler)
-                ]
-            },
-            fallbacks=[CommandHandler("cancel", cancel_handler)],
-        )
-        app.add_handler(infi_rating_conv)
-
         find_book_handler = ConversationHandler(
             entry_points=[
                 CommandHandler(
@@ -102,16 +87,19 @@ def get_app():
             },
             fallbacks=[
                 CommandHandler("cancel", cancel_handler),
+                CommandHandler("start", start),
             ],
         )
+        app.add_handler(rating_handler)
+        app.add_handler(comment_handler)
         app.add_handler(find_book_handler)
+        app.add_handler(CommandHandler("start", start))
 
         logging.info("Bot initialized successfully.")
 
         app.run_polling()
 
     except Exception as e:
-
         logging.error(f"Error occurred while initializing the bot: {e}", exc_info=True)
 
 

@@ -2,15 +2,19 @@ import asyncio
 import logging
 from logging.config import fileConfig
 
+from sqlmodel import SQLModel
+
 from alembic import context
 from bot.core.config import settings
-from bot.db.book_db import *  # noqa*
 from bot.db.conection import engine
+from bot.db.user_comment import *  # noqa*
 
 config = context.config
 if config.config_file_name:
     fileConfig(config.config_file_name)
 config.set_main_option(name="sqlalchemy.url", value=str(settings.db_connection_uri))
+
+
 target_metadata = SQLModel.metadata
 
 
