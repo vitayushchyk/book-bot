@@ -4,21 +4,11 @@ from telegram.ext import (
     ContextTypes,
     ConversationHandler,
     MessageHandler,
-
-
-
-
-
     filters,
 )
 
 from bot.core.config import settings
 from bot.servis.ratting_books import RattingBooks
-
-
-
-
-
 
 GOOGLE_BOOKS_CLIENT = RattingBooks(settings.google_book_api_key)
 WAITING_FOR_BOOK_NAME = 1
