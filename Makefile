@@ -25,7 +25,7 @@ drop_all_containers: ## Drop all containers
 
 lint_check: run_app
 	docker compose exec bot poetry install --only dev --no-root
-	docker compose exec bot poetry run black . && poetry run isort . --profile black
+	docker compose exec bot poetry run black --check . && poetry run isort --check . --profile black
 
 open_shell: ## Open shell to the app container
 	docker compose exec bot bash
