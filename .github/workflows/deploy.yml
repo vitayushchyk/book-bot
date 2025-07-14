@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: AWS
 
     steps:
       - name: Checkout code
@@ -19,9 +20,9 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           ECR_URI: ${{ secrets.ECR_URI }}
         run: |
-          echo $AWS_REGION
+          echo "AWS_REGION: $AWS_REGION"
           echo $AWS_ACCESS_KEY_ID
-          echo $ECR_URI
+          echo "$ECR_URI: $ECR_URI"
           aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin $ECR_URI
 
       - name: Build Docker image
