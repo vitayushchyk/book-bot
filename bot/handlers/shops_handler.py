@@ -139,7 +139,7 @@ async def book_name_handle(
             await update.message.reply_text(
                 text="`Воу-воу, стоПЕ`\n\n"
                 f"`Книга з назвою` '{book_name}' `настільки ексклюзивна, що навіть гугл не знає 📚`\n\n"
-                f"`BTW, чекни правопис, чи може щось інше чекнеш ?  👉👈`",
+                f"`BTW, може з правописом натупив, чи щось інше чекнеш ?  👉👈`",
                 parse_mode="Markdown",
             )
     except Exception as e:
