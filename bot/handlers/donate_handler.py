@@ -1,3 +1,5 @@
+import asyncio
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     CallbackQueryHandler,
@@ -6,64 +8,26 @@ from telegram.ext import (
     ConversationHandler,
 )
 
-from bot.handlers.cancel_handler import cancel_handler
-from bot.handlers.start_handler import start
 
-DONATE_CHOICE = 1
-
-donate_link_keyboard = InlineKeyboardMarkup(
-    [
-        [
-            InlineKeyboardButton(
-                "На інфраструктуру та каву 🍻", url="https://donatello.to/HippobookSter"
-            )
-        ]
-    ]
-)
-
-choice_keyboard = InlineKeyboardMarkup(
-    [
-        [
-            InlineKeyboardButton("Го 🚀", callback_data="go_start"),
-            InlineKeyboardButton("Пас 🙅‍♂️", callback_data="cancel_donate"),
-        ]
-    ]
-)
-
-
-async def donate_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-
+async def donate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "`👀 Wanna support this  🦛💨?`\n" "`Тицяй 👇`\n",
+        "`Wanna support this 👀`\n\n"
+        "`Твої 🍩 — це заряд 💸 наших серверів`\n"
+        "`Та дріпчики 🍻 для dev'чині`\n"
+        "`Тицяй на лінку для енергообміну 💕✨`\n"
+        "[Donatello](https://donatello.to/HippobookSter)\n\n"
+        "`Ми вері дякуємо 🦛💨🥺`",
         parse_mode="Markdown",
-        reply_markup=donate_link_keyboard,
         disable_web_page_preview=True,
     )
 
+    await asyncio.sleep(10)
+
     await update.message.reply_text(
-        "Го продовжувати, чи ти пас? 🙂", reply_markup=choice_keyboard
+        "`Летс гоу — 👻 `/start\n" "`Скіпаєшся вже — 🙅` /cancel\n",
+        parse_mode="Markdown",
     )
-    return DONATE_CHOICE
-
-
-async def donate_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    query = update.callback_query
-    await query.answer()
-    if query.data == "go_start":
-        await start(update, context)
-    elif query.data == "cancel_donate":
-        await cancel_handler(update, context)
     return ConversationHandler.END
 
 
-donate_handler = ConversationHandler(
-    entry_points=[CommandHandler("donate", donate_command)],
-    states={
-        DONATE_CHOICE: [
-            CallbackQueryHandler(donate_choice, pattern="^(go_start|cancel_donate)$")
-        ],
-    },
-    fallbacks=[
-        CommandHandler("cancel", cancel_handler),
-    ],
-)
+donate_handler = CommandHandler("donate", donate_command)
