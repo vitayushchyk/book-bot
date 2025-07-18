@@ -10,6 +10,7 @@ from telegram.ext import (
 
 from bot.core.config import settings
 from bot.handlers.cancel_handler import cancel_handler
+from bot.handlers.donate_handler import donate_handler
 from bot.handlers.rating_handler import rating_handler
 from bot.handlers.shops_handler import (
     NAME_BOOK,
@@ -93,6 +94,7 @@ def get_app():
         app.add_handler(rating_handler)
         app.add_handler(comment_handler)
         app.add_handler(find_book_handler)
+        app.add_handler(donate_handler)
         app.add_handler(CommandHandler("start", start))
 
         logging.info("Bot initialized successfully.")
