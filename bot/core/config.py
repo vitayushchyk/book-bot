@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     redis_password: Optional[SecretStr] = None
 
     bot_token: str
+    server_port: int
 
     search_url_sens: str
     search_url_eknygarnya: str
@@ -39,6 +40,7 @@ class Settings(BaseSettings):
     search_url_fabula: str
     google_book_api_key: str
     google_rating: str
+    webhook_base_url: str
 
     log_level: str = "INFO"
 
@@ -82,6 +84,10 @@ class Settings(BaseSettings):
                 path=f"/{self.redis_db}",
             )
         )
+
+    @property
+    def webhook_url(self) -> str:
+        return f"{self.webhook_base_url}/webhook"
 
 
 def create_color_formatter() -> logging.Formatter:

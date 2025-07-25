@@ -1,5 +1,8 @@
 import logging
+from contextlib import asynccontextmanager
 
+from fastapi import APIRouter, Depends, status
+from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -35,75 +38,112 @@ from bot.processor.search_manager import BookSearchManager
 logging.basicConfig()
 logging.getLogger().setLevel(settings.get_log_level())
 
+import logging
 
-def get_app():
-    logging.info("Initializing the bot...")
-    try:
-        yakaboo = Yakaboo(settings.search_url_yakaboo)
-        sens = Sens(settings.search_url_sens)
-        readeat = Readeat(settings.search_api_url_readeat)
-        eknygarnya = EKnygarnya(settings.search_url_eknygarnya)
-        zhupansky = ZhupanskyPublisher(settings.search_url_zhupansky)
-        bookling = Bookling(settings.search_url_bookling)
-        ksd = KSD(settings.search_url_ksd)
-        vivat = Vivat(settings.search_url_vivat)
-        lion = OldLion(settings.search_url_old_lion)
-        mbooks = MegogoBooks(settings.search_url_mbooks)
-        fabula = Fabula(settings.search_url_fabula)
-        search_manager = BookSearchManager(
-            [
-                yakaboo,
-                sens,
-                readeat,
-                eknygarnya,
-                zhupansky,
-                bookling,
-                ksd,
-                vivat,
-                lion,
-                mbooks,
-                fabula,
-            ],
-        )
-        app = ApplicationBuilder().token(settings.bot_token).build()
+from fastapi import FastAPI, HTTPException, Request
 
-        find_book_handler = ConversationHandler(
-            entry_points=[
-                CommandHandler(
-                    "findbook",
-                    lambda update, context: start_search_book_handler(
+
+@asynccontextmanager
+async def lifespan(app):
+    yakaboo = Yakaboo(settings.search_url_yakaboo)
+    sens = Sens(settings.search_url_sens)
+    readeat = Readeat(settings.search_api_url_readeat)
+    eknygarnya = EKnygarnya(settings.search_url_eknygarnya)
+    zhupansky = ZhupanskyPublisher(settings.search_url_zhupansky)
+    bookling = Bookling(settings.search_url_bookling)
+    ksd = KSD(settings.search_url_ksd)
+    vivat = Vivat(settings.search_url_vivat)
+    lion = OldLion(settings.search_url_old_lion)
+    mbooks = MegogoBooks(settings.search_url_mbooks)
+    fabula = Fabula(settings.search_url_fabula)
+    search_manager = BookSearchManager(
+        [
+            yakaboo,
+            sens,
+            readeat,
+            eknygarnya,
+            zhupansky,
+            bookling,
+            ksd,
+            vivat,
+            lion,
+            mbooks,
+            fabula,
+        ]
+    )
+
+    telegram_application = (
+        ApplicationBuilder().token(settings.bot_token).concurrent_updates(True).build()
+    )
+
+    find_book_handler = ConversationHandler(
+        entry_points=[
+            CommandHandler(
+                "findbook",
+                lambda update, context: start_search_book_handler(
+                    search_manager, update, context
+                ),
+            ),
+        ],
+        states={
+            NAME_BOOK: [
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND,
+                    lambda update, context: book_name_handle(
                         search_manager, update, context
                     ),
-                ),
+                )
             ],
-            states={
-                NAME_BOOK: [
-                    MessageHandler(
-                        filters.TEXT & ~filters.COMMAND,
-                        lambda update, context: book_name_handle(
-                            search_manager, update, context
-                        ),
-                    )
-                ],
-            },
-            fallbacks=[
-                CommandHandler("cancel", cancel_handler),
-                CommandHandler("start", start),
-            ],
-        )
-        app.add_handler(rating_handler)
-        app.add_handler(comment_handler)
-        app.add_handler(find_book_handler)
-        app.add_handler(donate_handler)
-        app.add_handler(CommandHandler("start", start))
+        },
+        fallbacks=[
+            CommandHandler("cancel", cancel_handler),
+            CommandHandler("start", start),
+        ],
+    )
+    telegram_application.add_handler(rating_handler)
+    telegram_application.add_handler(comment_handler)
+    telegram_application.add_handler(find_book_handler)
+    telegram_application.add_handler(donate_handler)
+    telegram_application.add_handler(CommandHandler("start", start))
 
-        logging.info("Bot initialized successfully.")
+    await telegram_application.initialize()
+    await telegram_application.start()
 
-        app.run_polling()
-
+    webhook_url = settings.webhook_url
+    try:
+        success = await telegram_application.bot.set_webhook(webhook_url)
+        if success:
+            logging.info(f"Webhook set to: {webhook_url}")
+        else:
+            logging.error("Failed to set webhook.")
     except Exception as e:
-        logging.error(f"Error occurred while initializing the bot: {e}", exc_info=True)
+        logging.exception(f"Error setting webhook: {e}")
+
+    app.state.telegram_application = telegram_application
+    app.state.search_manager = search_manager
+    try:
+        yield
+    finally:
+        telegram_application = app.state.telegram_application
+        await telegram_application.stop()
+        await telegram_application.shutdown()
 
 
-if __name__ == "__main__":
-    get_app()
+app = FastAPI(lifespan=lifespan)
+
+
+@app.post(
+    "/webhook",
+    status_code=status.HTTP_200_OK,
+)
+async def telegram_webhook(request: Request):
+    try:
+        data = await request.json()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON"
+        )
+    telegram_application = request.app.state.telegram_application
+    update = Update.de_json(data, telegram_application.bot)
+    await telegram_application.process_update(update)
+    return
