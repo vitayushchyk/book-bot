@@ -1,7 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import APIRouter, Depends, status
+from fastapi import status
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
