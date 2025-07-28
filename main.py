@@ -1,8 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import status
-from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -34,13 +32,15 @@ from bot.manager.vivat import Vivat
 from bot.manager.yakaboo import Yakaboo
 from bot.manager.zhupansky_publisher import ZhupanskyPublisher
 from bot.processor.search_manager import BookSearchManager
+from routers.health_check_routers import health_check_router
+from routers.webhook_routers import webhook_router
 
 logging.basicConfig()
 logging.getLogger().setLevel(settings.get_log_level())
 
 import logging
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI
 
 
 @asynccontextmanager
@@ -130,20 +130,5 @@ async def lifespan(app):
 
 
 app = FastAPI(lifespan=lifespan)
-
-
-@app.post(
-    "/webhook",
-    status_code=status.HTTP_200_OK,
-)
-async def telegram_webhook(request: Request):
-    try:
-        data = await request.json()
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON"
-        )
-    telegram_application = request.app.state.telegram_application
-    update = Update.de_json(data, telegram_application.bot)
-    await telegram_application.process_update(update)
-    return
+app.include_router(health_check_router)
+app.include_router(webhook_router)
