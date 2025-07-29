@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -10,6 +11,7 @@ from telegram.ext import (
 )
 
 from bot.core.config import settings
+from bot.core.shops_config import MANAGER_CONFIGS
 from bot.handlers.cancel_handler import cancel_handler
 from bot.handlers.donate_handler import donate_handler
 from bot.handlers.rating_handler import rating_handler
@@ -20,57 +22,19 @@ from bot.handlers.shops_handler import (
 )
 from bot.handlers.start_handler import start
 from bot.handlers.user_comment_handler import comment_handler
-from bot.manager.bookling import Bookling
-from bot.manager.e_knygarnya import EKnygarnya
-from bot.manager.fabula import Fabula
-from bot.manager.ksd import KSD
-from bot.manager.mbooks import MegogoBooks
-from bot.manager.old_lion import OldLion
-from bot.manager.readeat import Readeat
-from bot.manager.sens import Sens
-from bot.manager.vivat import Vivat
-from bot.manager.yakaboo import Yakaboo
-from bot.manager.zhupansky_publisher import ZhupanskyPublisher
 from bot.processor.search_manager import BookSearchManager
-from routers.health_check_routers import health_check_router
-from routers.webhook_routers import webhook_router
+from bot.routers.health_check_routers import health_check_router
+from bot.routers.webhook_routers import webhook_router
+
 
 logging.basicConfig()
 logging.getLogger().setLevel(settings.get_log_level())
 
-import logging
-
-from fastapi import FastAPI
-
 
 @asynccontextmanager
 async def lifespan(app):
-    yakaboo = Yakaboo(settings.search_url_yakaboo)
-    sens = Sens(settings.search_url_sens)
-    readeat = Readeat(settings.search_api_url_readeat)
-    eknygarnya = EKnygarnya(settings.search_url_eknygarnya)
-    zhupansky = ZhupanskyPublisher(settings.search_url_zhupansky)
-    bookling = Bookling(settings.search_url_bookling)
-    ksd = KSD(settings.search_url_ksd)
-    vivat = Vivat(settings.search_url_vivat)
-    lion = OldLion(settings.search_url_old_lion)
-    mbooks = MegogoBooks(settings.search_url_mbooks)
-    fabula = Fabula(settings.search_url_fabula)
-    search_manager = BookSearchManager(
-        [
-            yakaboo,
-            sens,
-            readeat,
-            eknygarnya,
-            zhupansky,
-            bookling,
-            ksd,
-            vivat,
-            lion,
-            mbooks,
-            fabula,
-        ]
-    )
+    managers = [cls(url) for cls, url in MANAGER_CONFIGS]
+    search_manager = BookSearchManager(managers)
 
     telegram_application = (
         ApplicationBuilder().token(settings.bot_token).concurrent_updates(True).build()
@@ -100,11 +64,15 @@ async def lifespan(app):
             CommandHandler("start", start),
         ],
     )
-    telegram_application.add_handler(rating_handler)
-    telegram_application.add_handler(comment_handler)
-    telegram_application.add_handler(find_book_handler)
-    telegram_application.add_handler(donate_handler)
-    telegram_application.add_handler(CommandHandler("start", start))
+    handlers = [
+        rating_handler,
+        comment_handler,
+        find_book_handler,
+        donate_handler,
+        CommandHandler("start", start),
+    ]
+    for handler in handlers:
+        telegram_application.add_handler(handler)
 
     await telegram_application.initialize()
     await telegram_application.start()
