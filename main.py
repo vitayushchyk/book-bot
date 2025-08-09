@@ -26,7 +26,6 @@ from bot.processor.search_manager import BookSearchManager
 from bot.routers.health_check_routers import health_check_router
 from bot.routers.webhook_routers import webhook_router
 
-
 logging.basicConfig()
 logging.getLogger().setLevel(settings.get_log_level())
 
