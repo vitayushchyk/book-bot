@@ -24,8 +24,9 @@ drop_all_containers: ## Drop all containers
 	docker compose down -v --remove-orphans
 
 lint_check: run_app
-	  docker compose exec bot poetry run black .
-	  docker compose exec bot poetry run isort . --profile black
+	docker compose exec bot poetry install --with=dev
+	docker compose exec bot poetry run black .
+	docker compose exec bot poetry run isort . --profile black
 open_shell: ## Open shell to the app container
 	docker compose exec bot bash
 
