@@ -15,7 +15,7 @@ async def donate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "`Твої 🍩 — це заряд 💸 наших серверів`\n"
         "`Та дріпчики 🍻 для dev'чині`\n"
         "`Тицяй на лінку для енергообміну 💕✨`\n"
-        "[Donatello](https://donatello.to/HippobookSter)\n\n"
+        "[Mono 🫙](https://send.monobank.ua/jar/7YmhVaiTKT)\n\n"
         "`Ми вері дякуємо 🦛💨🥺`",
         parse_mode="Markdown",
         disable_web_page_preview=True,
