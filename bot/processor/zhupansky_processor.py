@@ -9,4 +9,4 @@ class ZhupanskyProcessor(BaseProcessor):
 
     @property
     def shop_name(self):
-        return "Zhupansky_publisher"
+        return "Видавництво Жупанського"

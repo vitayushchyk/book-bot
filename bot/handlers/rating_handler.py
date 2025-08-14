@@ -54,7 +54,7 @@ async def infi_rating_handler(update: Update, _: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text(
             text=(
-                "`Воу, ну шо ви бачите перед собою,\n"
+                "`Воу, шо ви бачите перед собою,\n"
                 f"це ж СКАРБ: '{query}' 🤖`\n"
                 "`API-шка зацінила, але такого не знайшла 💦`\n"
                 "`Погнав 🦛💨 upd робити`\n"

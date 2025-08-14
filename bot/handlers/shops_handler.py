@@ -41,7 +41,7 @@ async def book_name_handle(
     logging.info(f"Received a book name from user: {book_name}")
     await update.message.reply_text(
         text=f"`Wait a sec, зловив твій запит на: '{book_name}' 👾` \n"
-        f"`Розганаю сервери до максималок, 9 чи 10 сек для рейда нада 💃️`",
+        f"`Розганяю сервера до максималок, 9 чи 10 сек для рейда нада 💃️`",
         parse_mode="Markdown",
     )
     try:
@@ -107,7 +107,7 @@ async def book_name_handle(
                         book.get("title", "Гугл поламався"), version=2
                     )
                     escaped_price = escape_markdown(
-                        book.get("price", "Мабуть, безцінна"), version=2
+                        book.get("price", "Може, безцінна?"), version=2
                     )
                     escaped_link = book.get("link", "#")
 
