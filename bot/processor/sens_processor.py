@@ -6,4 +6,4 @@ from bot.processor.base_processor import BaseProcessor
 class SensBookProcessor(BaseProcessor):
     @property
     def shop_name(self):
-        return "Sens"
+        return "Сенс"
