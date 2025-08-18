@@ -36,6 +36,7 @@ async def init_db():
     logging.info("Database tables created successfully.")
 
 
+logging.info(f"REDIS CONNECTION URI: {settings.redis_connection_uri}")
 pool = RedisConnectionPool.from_url(settings.redis_connection_uri)
 redis = Redis(connection_pool=pool)
 
@@ -45,4 +46,6 @@ async def get_redis_client() -> Redis:
     return redis
 
 
-logging.info("Redis client created successfully.")
+logging.info(
+    f"Redis client created successfully with URL {settings.redis_connection_uri}"
+)
