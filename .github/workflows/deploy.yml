@@ -28,7 +28,7 @@ jobs:
       - name: Build Docker image
         run: docker build --platform linux/amd64 -t book-bot -f Dockerfile .
 
-      - name: Tag Docker image
+      - name: ag Docker image for ECR
         run: docker tag book-bot:latest ${{ secrets.ECR_URI }}/book-bot:latest
 
       - name: Push Docker image to Amazon ECR
