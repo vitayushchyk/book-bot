@@ -1,3 +1,5 @@
+import asyncio
+
 from telegram import Update
 from telegram.ext import (
     CommandHandler,
@@ -44,11 +46,11 @@ async def infi_rating_handler(update: Update, _: ContextTypes.DEFAULT_TYPE):
                 else:
                     num_str = f"{idx}"
                 message = (
-                    f"`Attention, oсь що маю для тебе 📖 number - {num_str}`\n\n"
-                    f"📝 `{book['title']}`\n"
-                    f"✍️ `{book['authors']}`\n"
-                    f"🎈 `{book['description']}`\n"
-                    f"⭐️ `{book['rating']}`"
+                    f"`👀⚠️Attention, книга number - {num_str}`\n\n"
+                    f"`📝Шо по назві?` `{book['title']}`\n\n"
+                    f"`✍️Шо по автору?` `{book['authors']}`\n\n"
+                    f"`🎈Шо по дескріпшину?` `{book['description']}`\n\n"
+                    f"`⭐️Шо по зірочках?` `{book['rating']}`"
                 )
                 await update.message.reply_text(message, parse_mode="Markdown")
     else:
@@ -61,6 +63,8 @@ async def infi_rating_handler(update: Update, _: ContextTypes.DEFAULT_TYPE):
             ),
             parse_mode="Markdown",
         )
+    sleep_time = 7
+    await asyncio.sleep(sleep_time)
     await update.message.reply_text(
         text=(
             "`Го далі переможні траї робити та рейтинги сьорчити?🫡\n"
