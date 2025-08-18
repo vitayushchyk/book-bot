@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     redis_host: str = "redis"
     redis_scheme: str
     redis_port: int = 6379
-    redis_db: int = 0
+    redis_db: int = " 0"
     redis_password: Optional[SecretStr] = None
 
     bot_token: str
@@ -84,7 +84,7 @@ class Settings(BaseSettings):
                     if self.redis_password
                     else None
                 ),
-                path=f"/{self.redis_db}",
+                path=f"{self.redis_db}",
             )
         )
 
