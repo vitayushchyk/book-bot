@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Optional
 from urllib.parse import quote
 
@@ -17,6 +18,7 @@ class Settings(BaseSettings):
     db_port: int = 5432
 
     redis_host: str = "redis"
+    redis_scheme: str
     redis_port: int = 6379
     redis_db: int = 0
     redis_password: Optional[SecretStr] = None
@@ -71,9 +73,10 @@ class Settings(BaseSettings):
 
     @property
     def redis_connection_uri(self) -> str:
+        scheme = os.getenv("REDIS_SCHEME", "redis")
         return str(
             RedisDsn.build(
-                scheme="redis",
+                scheme=scheme,
                 host=self.redis_host,
                 port=self.redis_port,
                 password=(
