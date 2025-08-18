@@ -2,8 +2,7 @@ import contextlib
 import logging
 from typing import AsyncGenerator
 
-from redis import Redis
-from redis.asyncio import ConnectionPool as RedisConnectionPool
+from redis.asyncio import ConnectionPool, Redis
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -30,19 +29,17 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db():
-
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
     logging.info("Database tables created successfully.")
 
 
 logging.info(f"REDIS CONNECTION URI: {settings.redis_connection_uri}")
-pool = RedisConnectionPool.from_url(settings.redis_connection_uri)
+pool = ConnectionPool.from_url(settings.redis_connection_uri)
 redis = Redis(connection_pool=pool)
 
 
 async def get_redis_client() -> Redis:
-
     return redis
 
 
