@@ -9,8 +9,8 @@ async def cancel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE = No
     logging.info("User canceled the book search.")
     await update.message.reply_text(
         text="`ОХРАНА - ОТМЄНА 👌`\n\n"
-        f"`Передумав?\n"
-        f"Пінгуй, 🦛💨 завжди тут, як Wi-Fi сусіда 📡`  👉 /start",
+        f"`Передумав?`\n"
+        f"Пінгуй, 🦛💨 завжди тут, як Wi-Fi сусіда 📡  👉` /start",
         parse_mode="Markdown",
     )
     return ConversationHandler.END
