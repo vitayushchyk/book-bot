@@ -100,7 +100,7 @@ async def book_name_handle(
                 books = group["books"]
 
                 escaped_shop_name = escape_markdown(shop_name.upper(), version=2)
-                shop_response = f"`В кіоску: - ✨{escaped_shop_name}✨`\n\n"
+                shop_response = f"`В кіоску 👉 ✨{escaped_shop_name}✨`\n\n"
 
                 for book in books:
                     escaped_title = escape_markdown(
@@ -109,13 +109,12 @@ async def book_name_handle(
                     escaped_price = escape_markdown(
                         book.get("price", "Може, безцінна?"), version=2
                     )
-                    escaped_link = book.get("link", "#")
-
+                    escaped_link = escape_markdown(book.get("link", "#"), version=2)
                     book_response = (
-                        f"📝`Шо по назві?` `{escaped_title}`\n"
-                        f"💸 `Шо по чом?` `{escaped_price}`\n"
-                        f"[🚀 Гоу за нею]({escaped_link})\n\n"
-                        f"`🔵🟡🔵🟡🔵`\n\n"
+                        f"`📝Шо по назві? `{escaped_title}`\n"
+                        f"`💸Шо по чом? `{escaped_price}`\n"
+                        f"[🚀 Гоу за нею]({escaped_link})\n"
+                        f"🔵🟡🔵🟡🔵\n\n"
                     )
 
                     if (

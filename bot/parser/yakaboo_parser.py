@@ -8,11 +8,9 @@ from bot.parser.base_parser import BaseParser
 
 
 class YakabooParser(BaseParser):
-
     BOOK_CONTAINER = "div.category-card"
     TITLE_SELECTOR = "a.ui-card-title.category-card__name"
-    PRICE_SELECTOR = "div.category-card__content .category-card__price"
-    NEW_PRICE_SELECTOR = ".special-price span"
+    CURRENT_PRICE_SELECTOR = "span.product-price.special-price, span.product-price"
     URL_SELECTOR = "a.category-card__image"
     URL_ATTRIBUTE = "href"
 
@@ -37,18 +35,15 @@ class YakabooParser(BaseParser):
 
         for book in soup.select(self.BOOK_CONTAINER):
             try:
-
                 title_elm = book.select_one(self.TITLE_SELECTOR)
                 title = title_elm.get_text(strip=True) if title_elm else None
 
-                is_special_price = book.select_one(self.NEW_PRICE_SELECTOR)
+                current_price_elm = book.select_one(self.CURRENT_PRICE_SELECTOR)
                 price = (
-                    is_special_price.get_text(strip=True) if is_special_price else None
+                    current_price_elm.get_text(strip=True)
+                    if current_price_elm
+                    else None
                 )
-                if not price:
-                    price_elm = book.select_one(self.PRICE_SELECTOR)
-                    price = price_elm.get_text(strip=True) if price_elm else None
-
                 url_elem = book.select_one(self.URL_SELECTOR)
                 url = (
                     urljoin(self.base_url, url_elem[self.URL_ATTRIBUTE])

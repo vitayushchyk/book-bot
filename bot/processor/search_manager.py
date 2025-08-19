@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 from typing import List
 
@@ -88,14 +89,16 @@ class BookSearchManager:
                 logging.warning(f"[NO_BOOKS] No books found for query: '{book_name}'")
 
             if all_books:
+
                 try:
                     logging.info(
-                        f"[CACHE] Save {len(all_books)} results to cache for '{book_name}'"
+                        f"[CACHE] Save {len(all_books)} results to cache for '{book_name}':\n{json.dumps(all_books, ensure_ascii=False, indent=2)}"
                     )
+
                     await self.cache.set_cached_books(book_name, all_books)
                 except Exception as e:
                     logging.error(
-                        f"[CACHE] Error saving data to cache for '{book_name}': {e}"
+                        f"[CACHE] Error saving data to cache for '{book_name}':\n{json.dumps(all_books, ensure_ascii=False, indent=2)} {e}"
                     )
 
         except Exception as overall_exception:
